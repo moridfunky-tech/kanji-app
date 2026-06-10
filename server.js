@@ -18,7 +18,7 @@ app.post('/api/grade', async (req, res) => {
       max_tokens: 100,
       messages: [{ role: 'user', content: [
         { type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: imageData } },
-        { type: 'text', text: `画像に手書きの漢字が書かれています。正解は「${answer}」です。画像に何か書かれていれば「正解」、完全に空白なら「未記入」と一言だけ答えてください。` }
+{ type: 'text', text: `画像に手書きの漢字が書かれています。正解は「${answer}」です。「${answer}」として読める字が書かれている場合のみ「正解」、空白・全く違う字・判読不能な場合は「不正解」と一言だけ答えてください。` }
       ]}]
     });
     const text = response.content[0].text.trim();
