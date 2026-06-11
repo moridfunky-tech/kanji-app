@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ローマ字メニュー</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Noto Sans JP','IPAGothic',sans-serif;
+  background:#fff5f5;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;
+}
+.back{
+  position:fixed;top:16px;left:16px;
+  font-size:10pt;color:#c0392b;text-decoration:none;
+  background:white;padding:6px 14px;border-radius:20px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+}
+h1{font-size:20pt;font-weight:700;color:#c0392b;margin-bottom:4px;text-align:center}
+.subtitle{font-size:10pt;color:#aaa;margin-bottom:36px;text-align:center}
+.cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+.card{
+  background:white;border-radius:12px;
+  box-shadow:0 3px 16px rgba(192,57,43,0.1);
+  padding:28px 32px;
+  display:flex;flex-direction:column;align-items:center;gap:10px;
+  text-decoration:none;color:inherit;
+  transition:transform 0.15s;min-width:160px;
+  border:1.5px solid #f0d0cc;
+}
+.card:hover{transform:translateY(-3px)}
+.card-icon{font-size:36pt;line-height:1}
+.card-name{font-size:14pt;font-weight:700;color:#1a1a2e}
+.card-desc{font-size:9pt;color:#aaa}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← もどる</a>
+<h1>✏️ ローマ字</h1>
+<p class="subtitle">なにをやる？</p>
+<div class="cards">
+  <a class="card" href="alphabet.html">
+    <div class="card-icon">🔤</div>
+    <div class="card-name">アルファベット</div>
+    <div class="card-desc">A〜Zの練習</div>
+  </a>
+  <a class="card" href="name_practice.html">
+    <div class="card-icon">✍️</div>
+    <div class="card-name">なまえ練習</div>
+    <div class="card-desc">MORIWAKI KANTA</div>
+  </a>
+  <a class="card" href="romaji_test.html">
+    <div class="card-icon">📝</div>
+    <div class="card-name">ローマ字テスト</div>
+    <div class="card-desc">あ〜わを書こう</div>
+  </a>
+</div>
+</body>
+</html>

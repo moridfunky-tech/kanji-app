@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ローマ字練習</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Noto Sans JP','IPAGothic',sans-serif;
+  background:#fff5f5;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:16px;
+}
+.back{
+  align-self:flex-start;
+  font-size:10pt;color:#c0392b;text-decoration:none;
+  background:white;padding:6px 14px;border-radius:20px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:16px;
+}
+h1{font-size:16pt;font-weight:700;color:#c0392b;margin-bottom:16px}
+.card{
+  background:white;border-radius:16px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);
+  padding:24px 20px;width:100%;max-width:420px;
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+}
+.progress-bar{
+  width:100%;height:6px;background:#f0e8e8;border-radius:3px;
+}
+.progress-fill{height:6px;background:#c0392b;border-radius:3px;transition:width 0.3s}
+.progress-text{font-size:9pt;color:#aaa}
+
+.kana{font-size:72pt;font-weight:700;color:#1a1a2e;line-height:1}
+.hint{font-size:10pt;color:#aaa}
+
+.canvas-wrap{
+  position:relative;width:280px;height:160px;
+  border:2px solid #e0d0cc;border-radius:8px;
+  background:white;cursor:crosshair;
+}
+.canvas-hint{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:80pt;font-weight:700;
+  color:rgba(192,57,43,0.05);
+  font-family:'Arial','Helvetica',sans-serif;
+  pointer-events:none;line-height:1;
+}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+
+.result{
+  font-size:16pt;font-weight:700;text-align:center;min-height:28px;
+}
+.result.ok{color:#27ae60}
+.result.ng{color:#c0392b}
+.result.wait{color:#aaa;font-size:10pt}
+
+.btns{display:flex;gap:12px}
+.btn{padding:10px 24px;border-radius:8px;border:none;font-size:11pt;font-weight:700;cursor:pointer}
+.btn-clear{background:#f5f5f5;color:#555}
+.btn-grade{background:#c0392b;color:white}
+.btn-grade:disabled{opacity:0.5;cursor:not-allowed}
+.btn-next{background:#27ae60;color:white;display:none}
+
+/* 結果画面 */
+.result-screen{
+  background:white;border-radius:16px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);
+  padding:32px 24px;width:100%;max-width:420px;
+  display:none;flex-direction:column;align-items:center;gap:16px;
+  text-align:center;
+}
+.result-score{font-size:48pt;font-weight:700;color:#c0392b;line-height:1}
+.result-total{font-size:14pt;color:#aaa}
+.result-list{width:100%;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.result-item{
+  border-radius:8px;padding:8px;font-size:10pt;text-align:center;
+}
+.result-item.ok{background:#f0fff4;color:#27ae60;border:1px solid #c3e6cb}
+.result-item.ng{background:#fff5f5;color:#c0392b;border:1px solid #f5c6c6}
+.result-kana{font-size:18pt;font-weight:700}
+.result-romaji{font-size:10pt}
+.btn-retry{background:#c0392b;color:white;padding:12px 32px;border-radius:8px;border:none;font-size:12pt;font-weight:700;cursor:pointer;margin-top:8px}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← もどる</a>
+<h1>✏️ ローマ字練習</h1>
+
+<div class="card" id="mainCard">
+  <div style="width:100%;display:flex;justify-content:space-between;align-items:center">
+    <div class="progress-text" id="progressText">1 / 45</div>
+    <div class="progress-text" id="scoreText">正解: 0</div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:2%"></div></div>
+  <div class="kana" id="kana">あ</div>
+  <div class="hint">ローマ字で書いてね</div>
+  <div class="canvas-wrap" id="canvasWrap">
+    <div class="canvas-hint" id="canvasHint"></div>
+    <canvas id="cv" width="560" height="320"></canvas>
+  </div>
+  <div class="result" id="result"></div>
+  <div class="btns">
+    <button class="btn btn-clear" onclick="clearCanvas()">消す</button>
+    <button class="btn btn-grade" id="gradeBtn" onclick="grade()">採点する</button>
+    <button class="btn btn-next" id="nextBtn" onclick="next()">つぎへ →</button>
+  </div>
+</div>
+
+<div class="result-screen" id="resultScreen">
+  <div>🎉 おわった！</div>
+  <div class="result-score" id="finalScore">0</div>
+  <div class="result-total" id="finalTotal">/ 45問</div>
+  <div class="result-list" id="resultList"></div>
+  <button class="btn-retry" onclick="retry()">もういちど</button>
+</div>
+
+<script>
+const questions = [
+  {kana:'あ',ans:'a'},{kana:'い',ans:'i'},{kana:'う',ans:'u'},{kana:'え',ans:'e'},{kana:'お',ans:'o'},
+  {kana:'か',ans:'ka'},{kana:'き',ans:'ki'},{kana:'く',ans:'ku'},{kana:'け',ans:'ke'},{kana:'こ',ans:'ko'},
+  {kana:'さ',ans:'sa'},{kana:'し',ans:'si'},{kana:'す',ans:'su'},{kana:'せ',ans:'se'},{kana:'そ',ans:'so'},
+  {kana:'た',ans:'ta'},{kana:'ち',ans:'ti'},{kana:'つ',ans:'tu'},{kana:'て',ans:'te'},{kana:'と',ans:'to'},
+  {kana:'な',ans:'na'},{kana:'に',ans:'ni'},{kana:'ぬ',ans:'nu'},{kana:'ね',ans:'ne'},{kana:'の',ans:'no'},
+  {kana:'は',ans:'ha'},{kana:'ひ',ans:'hi'},{kana:'ふ',ans:'hu'},{kana:'へ',ans:'he'},{kana:'ほ',ans:'ho'},
+  {kana:'ま',ans:'ma'},{kana:'み',ans:'mi'},{kana:'む',ans:'mu'},{kana:'め',ans:'me'},{kana:'も',ans:'mo'},
+  {kana:'や',ans:'ya'},{kana:'ゆ',ans:'yu'},{kana:'よ',ans:'yo'},
+  {kana:'ら',ans:'ra'},{kana:'り',ans:'ri'},{kana:'る',ans:'ru'},{kana:'れ',ans:'re'},{kana:'ろ',ans:'ro'},
+  {kana:'わ',ans:'wa'},{kana:'を',ans:'wo'},
+];
+
+let current = 0;
+let score = 0;
+let results = [];
+
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+ctx.strokeStyle = '#1a1a2e';
+ctx.lineWidth = 14;
+ctx.lineCap = 'round';
+ctx.lineJoin = 'round';
+let drawing = false;
+
+function pos(e){
+  const r = cv.getBoundingClientRect();
+  const scaleX = cv.width/r.width;
+  const scaleY = cv.height/r.height;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return {x:(clientX-r.left)*scaleX, y:(clientY-r.top)*scaleY};
+}
+cv.addEventListener('mousedown',e=>{drawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)});
+cv.addEventListener('mousemove',e=>{if(!drawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()});
+cv.addEventListener('mouseup',()=>drawing=false);
+cv.addEventListener('mouseleave',()=>drawing=false);
+cv.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)},{passive:false});
+cv.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()},{passive:false});
+cv.addEventListener('touchend',()=>drawing=false);
+
+function clearCanvas(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+}
+
+function updateDisplay(){
+  const q = questions[current];
+  document.getElementById('kana').textContent = q.kana;
+  document.getElementById('progressText').textContent = (current+1)+' / '+questions.length;
+  document.getElementById('scoreText').textContent = '正解: '+score;
+  document.getElementById('progressFill').style.width = ((current/questions.length)*100)+'%';
+  document.getElementById('result').textContent = '';
+  document.getElementById('result').className = 'result';
+  document.getElementById('gradeBtn').style.display = '';
+  document.getElementById('gradeBtn').disabled = false;
+  document.getElementById('nextBtn').style.display = 'none';
+  clearCanvas();
+}
+
+async function grade(){
+  const btn = document.getElementById('gradeBtn');
+  btn.disabled = true;
+  const r = document.getElementById('result');
+  r.className = 'result wait';
+  r.textContent = '採点中...';
+
+  const tmp = document.createElement('canvas');
+  tmp.width = cv.width; tmp.height = cv.height;
+  const tc = tmp.getContext('2d');
+  tc.fillStyle = 'white';
+  tc.fillRect(0,0,tmp.width,tmp.height);
+  tc.drawImage(cv,0,0);
+  const img = tmp.toDataURL('image/jpeg',0.95).split(',')[1];
+
+  const q = questions[current];
+  try{
+    const res = await fetch('/api/grade',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        imageData:img,
+        answer:q.ans,
+        question:`ひらがな「${q.kana}」のローマ字`,
+        prompt:`画像に手書きのローマ字が書かれています。「${q.kana}」のローマ字として正しく読める場合（大文字小文字どちらでも可、${q.ans}と同等の表記）のみ「正解」、空白・全く違う文字の場合は「不正解」と一言だけ答えてください。`
+      })
+    });
+    const d = await res.json();
+    if(d.correct){
+      r.className='result ok'; r.textContent='⭕ 正解！（'+q.ans+'）';
+      score++;
+    } else {
+      r.className='result ng'; r.textContent='❌ 正解は「'+q.ans+'」';
+    }
+    results.push({kana:q.kana, ans:q.ans, correct:d.correct});
+  }catch(e){
+    r.className='result ng'; r.textContent='エラー';
+    results.push({kana:q.kana, ans:q.ans, correct:false});
+  }
+
+  document.getElementById('scoreText').textContent = '正解: '+score;
+  btn.style.display = 'none';
+  document.getElementById('nextBtn').style.display = '';
+
+  if(current === questions.length-1){
+    document.getElementById('nextBtn').textContent = 'けっか見る ✓';
+    document.getElementById('nextBtn').style.background = '#c0392b';
+  }
+}
+
+function next(){
+  if(current === questions.length-1){
+    showResult();
+  } else {
+    current++;
+    updateDisplay();
+  }
+}
+
+function showResult(){
+  document.getElementById('mainCard').style.display = 'none';
+  const rs = document.getElementById('resultScreen');
+  rs.style.display = 'flex';
+  document.getElementById('finalScore').textContent = score;
+  document.getElementById('finalTotal').textContent = '/ '+questions.length+'問';
+
+  const list = document.getElementById('resultList');
+  list.innerHTML = '';
+  results.forEach(r=>{
+    const div = document.createElement('div');
+    div.className = 'result-item '+(r.correct?'ok':'ng');
+    div.innerHTML = `<div class="result-kana">${r.kana}</div><div class="result-romaji">${r.ans}</div>`;
+    list.appendChild(div);
+  });
+}
+
+function retry(){
+  current=0; score=0; results=[];
+  document.getElementById('resultScreen').style.display='none';
+  document.getElementById('mainCard').style.display='flex';
+  updateDisplay();
+}
+
+updateDisplay();
+</script>
+</body>
+</html>

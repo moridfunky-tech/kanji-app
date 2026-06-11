@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アルファベット練習</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans JP','IPAGothic',sans-serif;background:#fff5f5;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+.back{align-self:flex-start;font-size:10pt;color:#c0392b;text-decoration:none;background:white;padding:6px 14px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:16px}
+h1{font-size:16pt;font-weight:700;color:#c0392b;margin-bottom:16px}
+.alpha-list{display:grid;grid-template-columns:repeat(13,1fr);gap:6px;width:100%;max-width:700px;margin-bottom:16px}
+.alpha-btn{background:white;border:1.5px solid #e0d0cc;border-radius:8px;padding:8px 4px;text-align:center;cursor:pointer;font-size:14pt;font-weight:700;color:#1a1a2e;transition:background 0.1s;user-select:none}
+.alpha-btn:hover{background:#fff0f0}
+.alpha-btn.active{background:#c0392b;color:white;border-color:#c0392b}
+.alpha-btn.done{background:#f0fff4;border-color:#27ae60;color:#27ae60}
+.practice{background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);padding:20px;width:100%;max-width:500px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.letter-display{font-size:80pt;font-weight:700;color:#1a1a2e;font-family:'Arial','Helvetica',sans-serif;line-height:1}
+.letter-small{font-size:24pt;color:#888;font-family:'Arial','Helvetica',sans-serif}
+.reading-row{display:flex;align-items:center;gap:12px}
+.reading{font-size:18pt;font-weight:700;color:#c0392b}
+.speak-btn{background:#fff0f0;border:1.5px solid #c0392b;border-radius:20px;padding:6px 16px;font-size:11pt;color:#c0392b;cursor:pointer;font-weight:700}
+.canvas-wrap{position:relative;width:260px;height:260px;border:2px solid #e0d0cc;border-radius:8px;background:white;cursor:crosshair}
+.canvas-ghost{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:180pt;font-weight:700;color:rgba(192,57,43,0.07);font-family:'Arial','Helvetica',sans-serif;pointer-events:none;line-height:1;user-select:none}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+.btns{display:flex;gap:12px}
+.btn{padding:10px 24px;border-radius:8px;border:none;font-size:11pt;font-weight:700;cursor:pointer}
+.btn-clear{background:#f5f5f5;color:#555}
+.btn-next{background:#c0392b;color:white}
+.btn-done{background:#27ae60;color:white}
+.progress{font-size:9pt;color:#aaa}
+</style>
+</head>
+<body>
+<a class="back" href="romaji.html">← もどる</a>
+<h1>🔤 アルファベット練習</h1>
+<div class="alpha-list" id="alphaList"></div>
+<div class="practice">
+  <div style="display:flex;align-items:baseline;gap:16px">
+    <div class="letter-display" id="letterBig">A</div>
+    <div class="letter-small" id="letterSmall">a</div>
+  </div>
+  <div class="reading-row">
+    <div class="reading" id="reading">エイ</div>
+    <button class="speak-btn" onclick="speak()">🔊 きく</button>
+  </div>
+  <div class="canvas-wrap">
+    <div class="canvas-ghost" id="ghost">A</div>
+    <canvas id="cv" width="520" height="520"></canvas>
+  </div>
+  <div class="btns">
+    <button class="btn btn-clear" onclick="clearCanvas()">消す</button>
+    <button class="btn btn-next" id="nextBtn" onclick="next()">つぎへ →</button>
+  </div>
+  <div class="progress" id="progress">1 / 26</div>
+</div>
+<script>
+const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const readings = {A:'エイ',B:'ビー',C:'シー',D:'ディー',E:'イー',F:'エフ',G:'ジー',H:'エイチ',I:'アイ',J:'ジェイ',K:'ケイ',L:'エル',M:'エム',N:'エヌ',O:'オー',P:'ピー',Q:'キュー',R:'アール',S:'エス',T:'ティー',U:'ユー',V:'ブイ',W:'ダブリュー',X:'エックス',Y:'ワイ',Z:'ズィー'};
+let current=0;
+const done=new Array(26).fill(false);
+
+const list=document.getElementById('alphaList');
+letters.forEach((l,i)=>{
+  const btn=document.createElement('div');
+  btn.className='alpha-btn'+(i===0?' active':'');
+  btn.textContent=l;
+  btn.onclick=()=>goTo(i);
+  btn.id='ab'+i;
+  list.appendChild(btn);
+});
+
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+ctx.strokeStyle='#c0392b';ctx.lineWidth=16;ctx.lineCap='round';ctx.lineJoin='round';
+let drawing=false;
+
+function pos(e){
+  const r=cv.getBoundingClientRect();
+  const scaleX=cv.width/r.width,scaleY=cv.height/r.height;
+  const clientX=e.touches?e.touches[0].clientX:e.clientX;
+  const clientY=e.touches?e.touches[0].clientY:e.clientY;
+  return{x:(clientX-r.left)*scaleX,y:(clientY-r.top)*scaleY};
+}
+cv.addEventListener('mousedown',e=>{drawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)});
+cv.addEventListener('mousemove',e=>{if(!drawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()});
+cv.addEventListener('mouseup',()=>drawing=false);
+cv.addEventListener('mouseleave',()=>drawing=false);
+cv.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)},{passive:false});
+cv.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()},{passive:false});
+cv.addEventListener('touchend',()=>drawing=false);
+
+function clearCanvas(){ctx.clearRect(0,0,cv.width,cv.height)}
+
+function speak(){
+  const u=new SpeechSynthesisUtterance(letters[current]);
+  u.lang='en-US';u.rate=0.8;
+  const voices=speechSynthesis.getVoices();
+  const female=voices.find(v=>v.lang.startsWith('en')&&/female|zira|samantha|karen|victoria|moira/i.test(v.name));
+  if(female) u.voice=female;
+  speechSynthesis.speak(u);
+}
+
+function updateDisplay(){
+  const l=letters[current];
+  document.getElementById('letterBig').textContent=l;
+  document.getElementById('letterSmall').textContent=l.toLowerCase();
+  document.getElementById('ghost').textContent=l;
+  document.getElementById('reading').textContent=readings[l];
+  document.getElementById('progress').textContent=(current+1)+' / 26';
+  letters.forEach((_,i)=>{
+    document.getElementById('ab'+i).className='alpha-btn'+(i===current?' active':done[i]?' done':'');
+  });
+  const nb=document.getElementById('nextBtn');
+  if(current===25){nb.textContent='おわり ✓';nb.className='btn btn-done';}
+  else{nb.textContent='つぎへ →';nb.className='btn btn-next';}
+  clearCanvas();
+}
+
+function goTo(i){current=i;updateDisplay()}
+
+function next(){
+  done[current]=true;
+  if(current<25){current++;updateDisplay();}
+  else{
+    done[current]=true;
+    letters.forEach((_,i)=>{document.getElementById('ab'+i).className='alpha-btn done'});
+    document.getElementById('progress').textContent='ぜんぶできた！🎉';
+  }
+}
+updateDisplay();
+</script>
+</body>
+</html>

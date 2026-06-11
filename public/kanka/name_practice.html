@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>なまえ練習</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Noto Sans JP','IPAGothic',sans-serif;
+  background:#fff5f5;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:16px;
+}
+.back{
+  align-self:flex-start;
+  font-size:10pt;color:#c0392b;text-decoration:none;
+  background:white;padding:6px 14px;border-radius:20px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:16px;
+}
+h1{font-size:16pt;font-weight:700;color:#c0392b;margin-bottom:4px;text-align:center}
+.subtitle{font-size:10pt;color:#888;margin-bottom:16px;text-align:center;letter-spacing:0.1em}
+.name-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:900px}
+.space-gap{width:20px}
+.letter-card{
+  background:white;border:1.5px solid #e0d0cc;border-radius:10px;
+  padding:8px 6px;display:flex;flex-direction:column;align-items:center;gap:6px;width:90px;
+}
+.letter-label{font-size:20pt;font-weight:700;color:#1a1a2e;font-family:'Arial','Helvetica',sans-serif;line-height:1}
+.canvas-block{display:flex;flex-direction:column;gap:4px;width:100%}
+.cv-row{display:flex;align-items:center;gap:4px}
+.cv-tag{font-size:8pt;color:#aaa;min-width:12px;text-align:center}
+.canvas-wrap{position:relative;flex:1;height:60px;border:1.5px solid #e0d0cc;border-radius:6px;background:white;cursor:crosshair}
+.canvas-ghost{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:40pt;font-weight:700;color:rgba(192,57,43,0.07);
+  font-family:'Arial','Helvetica',sans-serif;pointer-events:none;line-height:1;
+}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+.clear-btn{background:none;border:none;font-size:8pt;color:#ccc;cursor:pointer;padding:2px}
+.clear-btn:hover{color:#c0392b}
+.all-clear{
+  margin-top:16px;background:#f5f5f5;border:none;border-radius:8px;
+  padding:10px 28px;font-size:11pt;font-weight:700;color:#555;cursor:pointer;
+}
+.all-clear:hover{background:#eee}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← もどる</a>
+<h1>✏️ なまえの練習</h1>
+<p class="subtitle">MORIWAKI　KANTA</p>
+<div class="name-grid" id="nameGrid"></div>
+<button class="all-clear" onclick="clearAll()">全部消す</button>
+<script>
+const name1 = ['M','O','R','I','W','A','K','I'];
+const name2 = ['K','A','N','T','A'];
+const cvs = {};
+
+function makeCard(letter, id){
+  const card = document.createElement('div');
+  card.className = 'letter-card';
+  const label = document.createElement('div');
+  label.className = 'letter-label';
+  label.textContent = letter;
+  card.appendChild(label);
+  const block = document.createElement('div');
+  block.className = 'canvas-block';
+  ['upper','lower'].forEach(type=>{
+    const row = document.createElement('div');
+    row.className = 'cv-row';
+    const tag = document.createElement('div');
+    tag.className = 'cv-tag';
+    tag.textContent = type==='upper' ? '大' : '小';
+    row.appendChild(tag);
+    const wrap = document.createElement('div');
+    wrap.className = 'canvas-wrap';
+    const ghost = document.createElement('div');
+    ghost.className = 'canvas-ghost';
+    ghost.textContent = type==='upper' ? letter : letter.toLowerCase();
+    wrap.appendChild(ghost);
+    const cv = document.createElement('canvas');
+    cv.width = 200; cv.height = 120;
+    wrap.appendChild(cv);
+    row.appendChild(wrap);
+    block.appendChild(row);
+    const ctx = cv.getContext('2d');
+    ctx.strokeStyle = '#1a1a2e';
+    ctx.lineWidth = 8;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    cvs[id+'_'+type] = {cv, ctx};
+    let drawing = false;
+    function getPos(e){
+      const r=cv.getBoundingClientRect();
+      const sx=cv.width/r.width, sy=cv.height/r.height;
+      const cx=e.touches?e.touches[0].clientX:e.clientX;
+      const cy=e.touches?e.touches[0].clientY:e.clientY;
+      return{x:(cx-r.left)*sx,y:(cy-r.top)*sy};
+    }
+    cv.addEventListener('mousedown',e=>{drawing=true;const p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)});
+    cv.addEventListener('mousemove',e=>{if(!drawing)return;const p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke()});
+    cv.addEventListener('mouseup',()=>drawing=false);
+    cv.addEventListener('mouseleave',()=>drawing=false);
+    cv.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)},{passive:false});
+    cv.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke()},{passive:false});
+    cv.addEventListener('touchend',()=>drawing=false);
+  });
+  const clearBtn = document.createElement('button');
+  clearBtn.className = 'clear-btn';
+  clearBtn.textContent = '消す';
+  clearBtn.onclick = ()=>{
+    ['upper','lower'].forEach(t=>{
+      const {cv,ctx}=cvs[id+'_'+t];
+      ctx.clearRect(0,0,cv.width,cv.height);
+    });
+  };
+  card.appendChild(block);
+  card.appendChild(clearBtn);
+  return card;
+}
+
+const grid = document.getElementById('nameGrid');
+name1.forEach((l,i)=>grid.appendChild(makeCard(l,'n1_'+i)));
+const sp = document.createElement('div');
+sp.className = 'space-gap';
+grid.appendChild(sp);
+name2.forEach((l,i)=>grid.appendChild(makeCard(l,'n2_'+i)));
+
+function clearAll(){
+  Object.values(cvs).forEach(({cv,ctx})=>ctx.clearRect(0,0,cv.width,cv.height));
+}
+</script>
+</body>
+</html>
