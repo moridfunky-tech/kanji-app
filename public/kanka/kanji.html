@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>漢字テスト 3年生 第1週</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans JP',sans-serif;background:#f5f2ee;color:#1a1a2e}
+.hdr{background:white;border-bottom:3px solid #c0392b;padding:12px 20px;display:flex;justify-content:space-between;align-items:center}
+.hdr h1{font-size:20pt;font-weight:700;color:#c0392b;font-family:serif}
+.score-disp{font-size:14pt;color:#555}
+.score-disp span{color:#c0392b;font-size:18pt;font-weight:700}
+.main{max-width:900px;margin:0 auto;padding:16px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.card{background:white;border:1.5px solid #c8c0b8;border-radius:8px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative}
+.card.ok{border-color:#27ae60;background:#f0fff4}
+.card.ng{border-color:#c0392b;background:#fff5f5}
+.qnum{position:absolute;top:6px;right:8px;font-size:8pt;font-weight:700;color:#c0392b}
+.qtext{font-size:11pt;text-align:center;line-height:1.8}
+.hl{color:#c0392b;font-weight:700}
+.cwrap{border:1px solid #c8c0b8;border-radius:4px;background:white;cursor:crosshair}
+.cwrap canvas{display:block;width:120px;height:120px}
+.clr{background:none;border:none;font-size:10px;color:#aaa;cursor:pointer;padding:2px 0;width:100%;text-align:center}
+.clr:hover{color:#c0392b}
+.res{font-size:11pt;font-weight:700;text-align:center;min-height:24px}
+.res.ok{color:#27ae60}
+.res.ng{color:#c0392b}
+.res.wait{color:#aaa;font-size:9pt}
+.btns{padding:12px 8px;text-align:center;display:flex;gap:12px;justify-content:center}
+.gbtn{background:#c0392b;color:white;border:none;padding:12px 32px;border-radius:6px;font-size:14pt;font-weight:700;cursor:pointer}
+.gbtn:disabled{opacity:0.5;cursor:not-allowed}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <h1>土曜テスト　第1週</h1>
+  <div class="score-disp">結果: <span id="sv">－</span> / 15</div>
+</div>
+<div class="main">
+  <div class="grid" id="grid"></div>
+  <div class="btns">
+    <button class="gbtn" id="gbtn" onclick="gradeAll()">採点する</button>
+  </div>
+  <div id="result-msg" style="text-align:center;margin-top:12px;font-size:14pt;font-weight:700;color:#c0392b"></div>
+</div>
+<script>
+const qs=[
+  {q:'先生が',b:'し',a:'を読んだ。',ans:'詩'},
+  {q:'家',b:'ぞく',a:'で旅行した。',ans:'族'},
+  {q:'木の',b:'は',a:'が落ちた。',ans:'葉'},
+  {q:'山に',b:'のぼ',a:'る。',ans:'登'},
+  {q:'言葉を',b:'つか',a:'う。',ans:'使'},
+  {q:'料理の',b:'あじ',a:'がいい。',ans:'味'},
+  {q:'買い',b:'もの',a:'に出かけた。',ans:'物'},
+  {q:'校門が',b:'ひら',a:'いた。',ans:'開'},
+  {q:'図書',b:'かん',a:'で本を読む。',ans:'館'},
+  {q:'番',b:'ごう',a:'を書く。',ans:'号'},
+  {q:'海が',b:'ふか',a:'い。',ans:'深'},
+  {q:'',b:'かん',a:'字を書く。',ans:'漢'},
+  {q:'音を',b:'しら',a:'べる。',ans:'調'},
+  {q:'お',b:'あたた',a:'かい春。',ans:'温'},
+  {q:'先生に',b:'と',a:'う。',ans:'問'},
+];
+const C=240,cvs=[],ctxs=[],drw=[];
+const nums='①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮';
+function build(){
+  const g=document.getElementById('grid');
+  qs.forEach((q,i)=>{
+    const d=document.createElement('div');
+    d.className='card';d.id='c'+i;
+    d.innerHTML=`<div class="qnum">${nums[i]}</div>
+<div class="qtext">${q.q}<span class="hl">【${q.b}】</span>${q.a}</div>
+<div class="cwrap"><canvas id="cv${i}" width="${C}" height="${C}"></canvas></div>
+<button class="clr" onclick="clr(${i})">消す</button>
+<div class="res" id="r${i}"></div>`;
+    g.appendChild(d);
+    const cv=document.getElementById('cv'+i);
+    const ctx=cv.getContext('2d');
+    ctx.strokeStyle='#1a1a2e';ctx.lineWidth=12;ctx.lineCap='round';ctx.lineJoin='round';
+    cvs.push(cv);ctxs.push(ctx);drw.push(false);
+    drawGuide(i);
+    cv.addEventListener('mousedown',e=>sd(i,e));
+    cv.addEventListener('mousemove',e=>dr(i,e));
+    cv.addEventListener('mouseup',()=>drw[i]=false);
+    cv.addEventListener('mouseleave',()=>drw[i]=false);
+    cv.addEventListener('touchstart',e=>{e.preventDefault();sd(i,e.touches[0]);},{passive:false});
+    cv.addEventListener('touchmove',e=>{e.preventDefault();dr(i,e.touches[0]);},{passive:false});
+    cv.addEventListener('touchend',()=>drw[i]=false);
+  });
+}
+function drawGuide(i){
+  const c=ctxs[i];c.save();
+  c.strokeStyle='#e8e0d8';c.lineWidth=1;
+  c.beginPath();c.moveTo(C/2,0);c.lineTo(C/2,C);c.moveTo(0,C/2);c.lineTo(C,C/2);c.stroke();
+  c.restore();
+}
+function pos(i,e){const r=cvs[i].getBoundingClientRect();return{x:(e.clientX-r.left)*(C/r.width),y:(e.clientY-r.top)*(C/r.height)};}
+function sd(i,e){drw[i]=true;const p=pos(i,e);ctxs[i].beginPath();ctxs[i].moveTo(p.x,p.y);}
+function dr(i,e){if(!drw[i])return;const p=pos(i,e);ctxs[i].lineTo(p.x,p.y);ctxs[i].stroke();}
+function clr(i){
+  ctxs[i].clearRect(0,0,C,C);drawGuide(i);
+  document.getElementById('r'+i).textContent='';
+  document.getElementById('r'+i).className='res';
+  document.getElementById('c'+i).className='card';
+}
+async function gradeAll(){
+  const btn=document.getElementById('gbtn');
+  btn.disabled=true;btn.textContent='採点中...';
+  const allResults=[];
+  for(let i=0;i<qs.length;i++){
+    const q=qs[i];
+    const tmp=document.createElement('canvas');
+    tmp.width=C;tmp.height=C;
+    const tc=tmp.getContext('2d');
+    tc.fillStyle='white';tc.fillRect(0,0,C,C);
+    tc.drawImage(cvs[i],0,0);
+    const img=tmp.toDataURL('image/jpeg',0.95).split(',')[1];
+    const r=document.getElementById('r'+i);
+    r.className='res wait';r.textContent='確認中...';
+    try{
+      const res=await fetch('/api/grade',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({imageData:img,answer:q.ans,question:q.q+q.b+q.a})
+      });
+      const d=await res.json();
+      allResults.push({question:q.q+'【'+q.b+'】'+q.a,answer:q.ans,correct:d.correct});
+      if(d.correct){
+        r.className='res ok';r.textContent='⭕ 正解！';
+        document.getElementById('c'+i).className='card ok';
+      }else{
+        r.className='res ng';r.textContent='❌ 正解は「'+q.ans+'」';
+        document.getElementById('c'+i).className='card ng';
+      }
+    }catch(e){
+      r.className='res ng';r.textContent='エラー';
+      allResults.push({question:q.q+'【'+q.b+'】'+q.a,answer:q.ans,correct:false});
+    }
+  }
+  const score=allResults.filter(r=>r.correct).length;
+  document.getElementById('sv').textContent=score;
+  btn.textContent='もう一度採点する';btn.disabled=false;
+  // 結果を送信
+  const today=new Date().toLocaleDateString('ja-JP');
+  try{
+    const res=await fetch('/api/submit',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({score,results:allResults,date:today,week:'第1週'})
+    });
+    const d=await res.json();
+    const msg=score>=15?'満点！すばらしい！':score>=10?'よくできました！':'もう少し練習しよう！';
+    document.getElementById('result-msg').textContent=`${score}/15点　${msg}　📧結果をメールで送りました！`;
+    if(d.weakKanji) document.getElementById('result-msg').textContent+=`　苦手: ${d.weakKanji}`;
+  }catch(e){
+    document.getElementById('result-msg').textContent=`${score}/15点　メール送信エラー`;
+  }
+}
+build();
+</script>
+</body>
+</html>
