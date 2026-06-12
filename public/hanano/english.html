@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英語 単語練習</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans JP','IPAGothic',sans-serif;background:#f0f7fc;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+.back{align-self:flex-start;font-size:10pt;color:#2980b9;text-decoration:none;background:white;padding:6px 14px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:16px}
+h1{font-size:16pt;font-weight:700;color:#2980b9;margin-bottom:16px}
+
+.mode-btns{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;justify-content:center}
+.mode-btn{padding:10px 20px;border-radius:20px;border:2px solid #2980b9;font-size:10pt;font-weight:700;cursor:pointer;background:white;color:#2980b9;transition:all 0.2s}
+.mode-btn.active{background:#2980b9;color:white}
+
+/* カードモード */
+.flashcard-wrap{width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.flashcard{
+  width:100%;background:white;border-radius:16px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);
+  padding:32px 24px;
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+  cursor:pointer;min-height:200px;justify-content:center;
+  border:2px solid #b8d4e8;transition:transform 0.2s;
+}
+.flashcard:hover{transform:scale(1.02)}
+.card-en{font-size:48pt;font-weight:700;color:#2980b9;font-family:'Arial',sans-serif;line-height:1}
+.card-ja{font-size:20pt;font-weight:700;color:#555;display:none}
+.card-category{font-size:8pt;color:#aaa;text-transform:uppercase;letter-spacing:0.1em}
+.card-hint{font-size:9pt;color:#aaa}
+.speak-btn{
+  background:#2980b9;color:white;border:none;
+  padding:10px 24px;border-radius:20px;font-size:11pt;font-weight:700;cursor:pointer;
+}
+.speak-btn:hover{background:#2471a3}
+.card-nav{display:flex;gap:12px;align-items:center}
+.nav-btn{background:white;border:2px solid #b8d4e8;border-radius:8px;padding:8px 20px;font-size:11pt;font-weight:700;color:#2980b9;cursor:pointer}
+.nav-btn:hover{background:#d6eaf8}
+.card-counter{font-size:10pt;color:#aaa}
+
+/* クイズモード共通 */
+.quiz-wrap{width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:18px}
+.progress-wrap{width:100%;display:flex;justify-content:space-between}
+.progress-text{font-size:9pt;color:#aaa}
+.progress-bar{width:100%;height:6px;background:#e0eef6;border-radius:3px;margin-top:4px}
+.progress-fill{height:6px;background:#2980b9;border-radius:3px;transition:width 0.3s}
+.question-box{background:white;border:2px solid #b8d4e8;border-radius:12px;padding:24px;width:100%;text-align:center}
+.q-en{font-size:36pt;font-weight:700;color:#2980b9;font-family:'Arial',sans-serif;line-height:1}
+.q-ja{font-size:24pt;font-weight:700;color:#1a1a2e}
+.q-speak{background:#e8f4fc;border:none;border-radius:20px;padding:6px 16px;font-size:10pt;color:#2980b9;cursor:pointer;font-weight:700;margin-top:8px}
+.choices{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice{background:#f0f7fc;border:2px solid #b8d4e8;border-radius:10px;padding:14px;font-size:14pt;font-weight:700;color:#1a1a2e;text-align:center;cursor:pointer;transition:all 0.15s;font-family:'Arial',sans-serif}
+.choice.ja{font-family:'Noto Sans JP',sans-serif;font-size:13pt}
+.choice:hover{background:#d6eaf8;border-color:#2980b9}
+.choice.correct{background:#f0fff4;border-color:#27ae60;color:#27ae60}
+.choice.wrong{background:#fff5f5;border-color:#c0392b;color:#c0392b}
+.choice.disabled{cursor:not-allowed}
+.result{font-size:14pt;font-weight:700;min-height:28px;text-align:center}
+.result.ok{color:#27ae60}
+.result.ng{color:#c0392b}
+.btn-next{background:#2980b9;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:12pt;font-weight:700;cursor:pointer;display:none;width:100%}
+
+/* 結果画面 */
+.result-screen{background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);padding:32px 24px;width:100%;max-width:400px;display:none;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.final-score{font-size:52pt;font-weight:700;color:#2980b9;line-height:1}
+.final-total{font-size:14pt;color:#aaa}
+.miss-list{width:100%;text-align:left;max-height:250px;overflow-y:auto}
+.miss-title{font-size:10pt;color:#888;margin-bottom:8px;font-weight:700}
+.miss-item{display:flex;align-items:center;gap:12px;padding:8px;border-bottom:1px solid #e0eef6}
+.miss-en{font-size:16pt;font-weight:700;color:#2980b9;font-family:'Arial',sans-serif;min-width:80px}
+.miss-ja{font-size:12pt;color:#27ae60;font-weight:700}
+.btn-retry{background:#2980b9;color:white;padding:12px 32px;border-radius:8px;border:none;font-size:12pt;font-weight:700;cursor:pointer;width:100%}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← 戻る</a>
+<h1>🌍 英語 単語練習</h1>
+
+<div class="mode-btns">
+  <button class="mode-btn active" id="modeCard" onclick="setMode('card')">📇 単語カード</button>
+  <button class="mode-btn" id="modeEn" onclick="setMode('en')">🇬🇧 英語→日本語</button>
+  <button class="mode-btn" id="modeJa" onclick="setMode('ja')">🇯🇵 日本語→英語</button>
+</div>
+
+<!-- 単語カードモード -->
+<div class="flashcard-wrap" id="cardMode">
+  <div class="flashcard" id="flashcard" onclick="flipCard()">
+    <div class="card-category" id="cardCategory">numbers</div>
+    <div class="card-en" id="cardEn">one</div>
+    <div class="card-ja" id="cardJa">いち</div>
+    <div class="card-hint">タップして日本語を見る</div>
+  </div>
+  <button class="speak-btn" onclick="speakCurrent()">🔊 発音を聞く</button>
+  <div class="card-nav">
+    <button class="nav-btn" onclick="prevCard()">← まえ</button>
+    <div class="card-counter" id="cardCounter">1 / 30</div>
+    <button class="nav-btn" onclick="nextCard()">つぎ →</button>
+  </div>
+</div>
+
+<!-- 英語→日本語クイズ -->
+<div class="quiz-wrap" id="enMode" style="display:none">
+  <div style="width:100%">
+    <div class="progress-wrap">
+      <div class="progress-text" id="enProgress">1 / 30</div>
+      <div class="progress-text" id="enScore">正解: 0</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="enFill" style="width:3%"></div></div>
+  </div>
+  <div class="question-box">
+    <div class="q-en" id="enQ">one</div>
+    <button class="q-speak" onclick="speakQ('en')">🔊 きく</button>
+  </div>
+  <div class="choices" id="enChoices"></div>
+  <div class="result" id="enResult"></div>
+  <button class="btn-next" id="enNext" onclick="nextQ('en')">つぎへ →</button>
+</div>
+
+<!-- 日本語→英語クイズ -->
+<div class="quiz-wrap" id="jaMode" style="display:none">
+  <div style="width:100%">
+    <div class="progress-wrap">
+      <div class="progress-text" id="jaProgress">1 / 30</div>
+      <div class="progress-text" id="jaScore">正解: 0</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="jaFill" style="width:3%"></div></div>
+  </div>
+  <div class="question-box">
+    <div class="q-ja" id="jaQ">いち</div>
+    <button class="q-speak" onclick="speakQ('ja')">🔊 きく</button>
+  </div>
+  <div class="choices" id="jaChoices"></div>
+  <div class="result" id="jaResult"></div>
+  <button class="btn-next" id="jaNext" onclick="nextQ('ja')">つぎへ →</button>
+</div>
+
+<!-- 結果画面 -->
+<div class="result-screen" id="resultScreen">
+  <div>🎉 おわった！</div>
+  <div class="final-score" id="finalScore">0</div>
+  <div class="final-total" id="finalTotal">/ 30問</div>
+  <div class="miss-list" id="missList"></div>
+  <button class="btn-retry" onclick="retry()">もういちど</button>
+</div>
+
+<script>
+const words = [
+  {en:'one',ja:'いち（1）',cat:'numbers'},
+  {en:'two',ja:'に（2）',cat:'numbers'},
+  {en:'three',ja:'さん（3）',cat:'numbers'},
+  {en:'four',ja:'し（4）',cat:'numbers'},
+  {en:'five',ja:'ご（5）',cat:'numbers'},
+  {en:'six',ja:'ろく（6）',cat:'numbers'},
+  {en:'seven',ja:'しち（7）',cat:'numbers'},
+  {en:'eight',ja:'はち（8）',cat:'numbers'},
+  {en:'nine',ja:'く（9）',cat:'numbers'},
+  {en:'ten',ja:'じゅう（10）',cat:'numbers'},
+  {en:'red',ja:'あか',cat:'colors'},
+  {en:'blue',ja:'あお',cat:'colors'},
+  {en:'green',ja:'みどり',cat:'colors'},
+  {en:'yellow',ja:'きいろ',cat:'colors'},
+  {en:'white',ja:'しろ',cat:'colors'},
+  {en:'black',ja:'くろ',cat:'colors'},
+  {en:'pink',ja:'ピンク',cat:'colors'},
+  {en:'orange',ja:'オレンジ',cat:'colors'},
+  {en:'dog',ja:'いぬ',cat:'animals'},
+  {en:'cat',ja:'ねこ',cat:'animals'},
+  {en:'bird',ja:'とり',cat:'animals'},
+  {en:'fish',ja:'さかな',cat:'animals'},
+  {en:'rabbit',ja:'うさぎ',cat:'animals'},
+  {en:'elephant',ja:'ぞう',cat:'animals'},
+  {en:'apple',ja:'りんご',cat:'food'},
+  {en:'banana',ja:'バナナ',cat:'food'},
+  {en:'rice',ja:'ごはん',cat:'food'},
+  {en:'bread',ja:'パン',cat:'food'},
+  {en:'milk',ja:'ぎゅうにゅう',cat:'food'},
+  {en:'water',ja:'みず',cat:'food'},
+];
+
+const catNames = {numbers:'数字',colors:'色',animals:'動物',food:'食べ物'};
+
+let mode = 'card';
+let cardIdx = 0;
+let flipped = false;
+let enQ=[], jaQ=[], enCur=0, jaCur=0, enScore=0, jaScore=0;
+let enMisses=[], jaMisses=[], enAnswered=false, jaAnswered=false;
+
+function shuffle(arr){return [...arr].sort(()=>Math.random()-0.5)}
+
+function speak(text){
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang='en-US'; u.rate=0.8;
+  const voices=speechSynthesis.getVoices();
+  const female=voices.find(v=>v.lang.startsWith('en')&&/female|samantha|karen/i.test(v.name));
+  if(female) u.voice=female;
+  speechSynthesis.speak(u);
+}
+
+function setMode(m){
+  mode=m;
+  ['card','en','ja'].forEach(id=>{
+    document.getElementById(id+'Mode').style.display='none';
+  });
+  document.getElementById(m+'Mode').style.display='flex';
+  ['modeCard','modeEn','modeJa'].forEach(id=>{
+    document.getElementById(id).className='mode-btn';
+  });
+  document.getElementById('mode'+m.charAt(0).toUpperCase()+m.slice(1)).className='mode-btn active';
+  document.getElementById('resultScreen').style.display='none';
+
+  if(m==='en'){initQuiz('en');}
+  else if(m==='ja'){initQuiz('ja');}
+  else{updateCard();}
+}
+
+// カードモード
+function updateCard(){
+  flipped=false;
+  const w=words[cardIdx];
+  document.getElementById('cardEn').style.display='block';
+  document.getElementById('cardJa').style.display='none';
+  document.getElementById('cardEn').textContent=w.en;
+  document.getElementById('cardJa').textContent=w.ja;
+  document.getElementById('cardCategory').textContent=catNames[w.cat];
+  document.getElementById('cardCounter').textContent=(cardIdx+1)+' / '+words.length;
+  document.querySelector('.card-hint').textContent='タップして日本語を見る';
+}
+function flipCard(){
+  flipped=!flipped;
+  document.getElementById('cardJa').style.display=flipped?'block':'none';
+  document.querySelector('.card-hint').textContent=flipped?'':'タップして日本語を見る';
+  if(flipped) speak(words[cardIdx].en);
+}
+function prevCard(){if(cardIdx>0){cardIdx--;updateCard();}}
+function nextCard(){if(cardIdx<words.length-1){cardIdx++;updateCard();}}
+function speakCurrent(){speak(words[cardIdx].en);}
+
+// クイズモード
+function initQuiz(type){
+  if(type==='en'){
+    enQ=shuffle(words); enCur=0; enScore=0; enMisses=[]; enAnswered=false;
+    updateQuiz('en');
+  } else {
+    jaQ=shuffle(words); jaCur=0; jaScore=0; jaMisses=[]; jaAnswered=false;
+    updateQuiz('ja');
+  }
+}
+
+function getChoices4(correct, all, key){
+  const wrong=shuffle(all.filter(w=>w[key]!==correct[key])).slice(0,3);
+  return shuffle([correct,...wrong]);
+}
+
+function updateQuiz(type){
+  const isEn=type==='en';
+  const q=isEn?enQ[enCur]:jaQ[jaCur];
+  const cur=isEn?enCur:jaCur;
+  const total=words.length;
+  const score=isEn?enScore:jaScore;
+
+  document.getElementById(type+'Progress').textContent=(cur+1)+' / '+total;
+  document.getElementById(type+'Score').textContent='正解: '+score;
+  document.getElementById(type+'Fill').style.width=((cur/total)*100)+'%';
+  document.getElementById(type+'Result').textContent='';
+  document.getElementById(type+'Result').className='result';
+  document.getElementById(type+'Next').style.display='none';
+  if(isEn) enAnswered=false; else jaAnswered=false;
+
+  if(isEn){
+    document.getElementById('enQ').textContent=q.en;
+  } else {
+    document.getElementById('jaQ').textContent=q.ja;
+  }
+
+  const choices=isEn?getChoices4(q,words,'ja'):getChoices4(q,words,'en');
+  const el=document.getElementById(type+'Choices');
+  el.innerHTML='';
+  choices.forEach(c=>{
+    const btn=document.createElement('div');
+    btn.className='choice'+(isEn?' ja':'');
+    btn.textContent=isEn?c.ja:c.en;
+    btn.onclick=()=>answerQ(type, isEn?c.ja:c.en, isEn?q.ja:q.en, btn, q);
+    el.appendChild(btn);
+  });
+
+  document.getElementById(type+'Next').textContent=
+    cur===total-1?'けっか見る ✓':'つぎへ →';
+}
+
+function speakQ(type){
+  const q=type==='en'?enQ[enCur]:jaQ[jaCur];
+  speak(q.en);
+}
+
+function answerQ(type, selected, correct, btn, q){
+  const isEn=type==='en';
+  if(isEn&&enAnswered) return;
+  if(!isEn&&jaAnswered) return;
+  if(isEn) enAnswered=true; else jaAnswered=true;
+
+  document.querySelectorAll('#'+type+'Choices .choice').forEach(b=>{
+    b.classList.add('disabled');
+    if(b.textContent===correct) b.classList.add('correct');
+  });
+
+  const r=document.getElementById(type+'Result');
+  if(selected===correct){
+    btn.classList.add('correct');
+    r.className='result ok'; r.textContent='⭕ 正解！';
+    if(isEn) enScore++; else jaScore++;
+  } else {
+    btn.classList.add('wrong');
+    r.className='result ng'; r.textContent='❌ 正解は「'+correct+'」';
+    if(isEn) enMisses.push(q); else jaMisses.push(q);
+  }
+  document.getElementById(type+'Score').textContent='正解: '+(isEn?enScore:jaScore);
+  document.getElementById(type+'Next').style.display='block';
+}
+
+function nextQ(type){
+  const isEn=type==='en';
+  const cur=isEn?enCur:jaCur;
+  if(cur===words.length-1){
+    showResult(type);
+  } else {
+    if(isEn) enCur++; else jaCur++;
+    updateQuiz(type);
+  }
+}
+
+function showResult(type){
+  const isEn=type==='en';
+  const score=isEn?enScore:jaScore;
+  const misses=isEn?enMisses:jaMisses;
+
+  ['card','en','ja'].forEach(id=>{document.getElementById(id+'Mode').style.display='none'});
+  const rs=document.getElementById('resultScreen');
+  rs.style.display='flex';
+  document.getElementById('finalScore').textContent=score;
+  document.getElementById('finalTotal').textContent='/ '+words.length+'問';
+
+  const ml=document.getElementById('missList');
+  if(misses.length===0){
+    ml.innerHTML='<div style="text-align:center;color:#27ae60;font-weight:700;font-size:12pt">全問正解！🎉</div>';
+  } else {
+    ml.innerHTML='<div class="miss-title">まちがえた単語</div>'+
+      misses.map(m=>`<div class="miss-item"><div class="miss-en">${m.en}</div><div class="miss-ja">${m.ja}</div></div>`).join('');
+  }
+}
+
+function retry(){
+  document.getElementById('resultScreen').style.display='none';
+  setMode(mode);
+}
+
+updateCard();
+</script>
+</body>
+</html>

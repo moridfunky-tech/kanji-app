@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>分数クイズ</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans JP','IPAGothic',sans-serif;background:#f0f7fc;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+.back{align-self:flex-start;font-size:10pt;color:#2980b9;text-decoration:none;background:white;padding:6px 14px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:16px}
+h1{font-size:16pt;font-weight:700;color:#2980b9;margin-bottom:16px}
+.level-btns{display:flex;gap:10px;margin-bottom:16px}
+.level-btn{padding:8px 20px;border-radius:20px;border:2px solid #2980b9;font-size:10pt;font-weight:700;cursor:pointer;background:white;color:#2980b9}
+.level-btn.active{background:#2980b9;color:white}
+.card{background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);padding:24px 20px;width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:20px}
+.progress-wrap{width:100%;display:flex;justify-content:space-between}
+.progress-text{font-size:9pt;color:#aaa}
+.progress-bar{width:100%;height:6px;background:#e0eef6;border-radius:3px;margin-top:4px}
+.progress-fill{height:6px;background:#2980b9;border-radius:3px;transition:width 0.3s}
+
+/* 分数表示 */
+.problem{
+  font-size:14pt;font-weight:700;color:#1a1a2e;
+  border:2px solid #b8d4e8;border-radius:12px;
+  padding:16px 20px;background:#f0f7fc;
+  width:100%;text-align:center;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.frac{display:inline-flex;flex-direction:column;align-items:center;font-size:20pt;font-weight:700;font-family:'Arial',sans-serif}
+.frac-num{border-bottom:2.5px solid #1a1a2e;padding:0 6px;line-height:1.3}
+.frac-den{padding:0 6px;line-height:1.3}
+.op{font-size:24pt;font-weight:700;color:#2980b9;font-family:'Arial',sans-serif}
+.eq{font-size:24pt;color:#888;font-family:'Arial',sans-serif}
+
+.choices{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice{
+  background:#f0f7fc;border:2px solid #b8d4e8;border-radius:10px;
+  padding:14px 8px;cursor:pointer;transition:all 0.15s;
+  display:flex;align-items:center;justify-content:center;
+}
+.choice:hover{background:#d6eaf8;border-color:#2980b9}
+.choice.correct{background:#f0fff4;border-color:#27ae60}
+.choice.wrong{background:#fff5f5;border-color:#c0392b}
+.choice.disabled{cursor:not-allowed}
+.choice .frac{font-size:18pt}
+.choice.correct .frac{color:#27ae60}
+.choice.wrong .frac{color:#c0392b}
+
+.result{font-size:14pt;font-weight:700;min-height:28px;text-align:center}
+.result.ok{color:#27ae60}
+.result.ng{color:#c0392b}
+.btn-next{background:#2980b9;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:12pt;font-weight:700;cursor:pointer;display:none;width:100%}
+
+.result-screen{background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);padding:32px 24px;width:100%;max-width:400px;display:none;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.final-score{font-size:52pt;font-weight:700;color:#2980b9;line-height:1}
+.final-total{font-size:14pt;color:#aaa}
+.miss-list{width:100%;text-align:left}
+.miss-title{font-size:10pt;color:#888;margin-bottom:8px;font-weight:700}
+.miss-item{display:flex;align-items:center;gap:8px;padding:8px;border-bottom:1px solid #e0eef6;font-size:11pt}
+.miss-prob{flex:1;display:flex;align-items:center;gap:6px}
+.miss-ans{color:#27ae60;font-weight:700;display:flex;align-items:center;gap:4px}
+.btn-retry{background:#2980b9;color:white;padding:12px 32px;border-radius:8px;border:none;font-size:12pt;font-weight:700;cursor:pointer;width:100%}
+</style>
+</head>
+<body>
+<a class="back" href="index.html">← 戻る</a>
+<h1>➗ 分数クイズ（通分）</h1>
+<div class="level-btns">
+  <button class="level-btn active" id="lvlAdd" onclick="setMode('add')">たし算</button>
+  <button class="level-btn" id="lvlSub" onclick="setMode('sub')">ひき算</button>
+</div>
+<div class="card" id="mainCard">
+  <div style="width:100%">
+    <div class="progress-wrap">
+      <div class="progress-text" id="progressText">1 / 20</div>
+      <div class="progress-text" id="scoreText">正解: 0</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:5%"></div></div>
+  </div>
+  <div class="problem" id="problem"></div>
+  <div class="choices" id="choices"></div>
+  <div class="result" id="result"></div>
+  <button class="btn-next" id="nextBtn" onclick="next()">つぎへ →</button>
+</div>
+<div class="result-screen" id="resultScreen">
+  <div>🎉 おわった！</div>
+  <div class="final-score" id="finalScore">0</div>
+  <div class="final-total">/ 20問</div>
+  <div class="miss-list" id="missList"></div>
+  <button class="btn-retry" onclick="retry()">もういちど</button>
+</div>
+
+<script>
+let mode = 'add';
+let questions=[], current=0, score=0, misses=[], answered=false;
+
+function gcd(a,b){return b===0?a:gcd(b,a%b)}
+function lcm(a,b){return a*b/gcd(a,b)}
+function simplify(n,d){const g=gcd(Math.abs(n),Math.abs(d));return{n:n/g,d:d/g}}
+
+// 分母のリスト（通分が必要なペア）
+const denomPairs = [
+  [2,3],[2,4],[2,5],[2,6],[3,4],[3,5],[3,6],[4,6],[2,8],[3,8],[4,8],[5,10],[2,10],[3,9],[4,12],[3,12]
+];
+
+function genQuestion(){
+  const pair = denomPairs[Math.floor(Math.random()*denomPairs.length)];
+  const d1 = pair[0], d2 = pair[1];
+  const n1 = Math.floor(Math.random()*(d1-1))+1;
+  let n2 = Math.floor(Math.random()*(d2-1))+1;
+  
+  if(mode==='sub'){
+    // 引き算：結果が正になるように
+    const common = lcm(d1,d2);
+    const total1 = n1*(common/d1);
+    const total2 = n2*(common/d2);
+    if(total1<=total2){
+      // n1/d1 < n2/d2 の場合はスワップ
+      return genQuestion();
+    }
+  }
+  
+  const common = lcm(d1,d2);
+  const resN = mode==='add' ? n1*(common/d1)+n2*(common/d2) : n1*(common/d1)-n2*(common/d2);
+  const ans = simplify(resN, common);
+  
+  return {n1,d1,n2,d2,ans};
+}
+
+function genQuestions(n){
+  const qs=[], used=new Set();
+  let tries=0;
+  while(qs.length<n && tries<200){
+    tries++;
+    const q=genQuestion();
+    const key=`${q.n1}/${q.d1}${mode}${q.n2}/${q.d2}`;
+    if(used.has(key)) continue;
+    used.add(key);
+    qs.push(q);
+  }
+  return qs;
+}
+
+function shuffle(arr){return [...arr].sort(()=>Math.random()-0.5)}
+
+function fracHTML(n,d,cls=''){
+  if(d===1) return `<span class="frac ${cls}" style="font-size:20pt">${n}</span>`;
+  return `<span class="frac ${cls}"><span class="frac-num">${n}</span><span class="frac-den">${d}</span></span>`;
+}
+
+function getChoices(correct){
+  const wrong=[];
+  let tries=0;
+  while(wrong.length<3 && tries<50){
+    tries++;
+    const offset=Math.floor(Math.random()*4)+1;
+    const sign=Math.random()<0.5?1:-1;
+    const newN=correct.n+sign*offset;
+    if(newN>0 && !(newN===correct.n && correct.d===correct.d)){
+      const w=simplify(newN,correct.d);
+      if(!wrong.find(x=>x.n===w.n&&x.d===w.d) && !(w.n===correct.n&&w.d===correct.d)){
+        wrong.push(w);
+      }
+    }
+  }
+  // 足りない場合は分母変えて補完
+  while(wrong.length<3){
+    wrong.push(simplify(correct.n+wrong.length+1, correct.d));
+  }
+  return shuffle([correct,...wrong]);
+}
+
+function setMode(m){
+  mode=m;
+  document.getElementById('lvlAdd').className='level-btn'+(m==='add'?' active':'');
+  document.getElementById('lvlSub').className='level-btn'+(m==='sub'?' active':'');
+  document.getElementById('resultScreen').style.display='none';
+  document.getElementById('mainCard').style.display='flex';
+  init();
+}
+
+function init(){
+  questions=genQuestions(20);
+  current=0;score=0;misses=[];answered=false;
+  updateDisplay();
+}
+
+function updateDisplay(){
+  answered=false;
+  const q=questions[current];
+  const op=mode==='add'?'+':'−';
+  document.getElementById('problem').innerHTML=
+    fracHTML(q.n1,q.d1)+
+    `<span class="op">${op}</span>`+
+    fracHTML(q.n2,q.d2)+
+    `<span class="eq">＝ ?</span>`;
+  document.getElementById('progressText').textContent=(current+1)+' / 20';
+  document.getElementById('scoreText').textContent='正解: '+score;
+  document.getElementById('progressFill').style.width=((current/20)*100)+'%';
+  document.getElementById('result').textContent='';
+  document.getElementById('result').className='result';
+  document.getElementById('nextBtn').style.display='none';
+
+  const choices=getChoices(q.ans);
+  const el=document.getElementById('choices');
+  el.innerHTML='';
+  choices.forEach(c=>{
+    const btn=document.createElement('div');
+    btn.className='choice';
+    btn.innerHTML=fracHTML(c.n,c.d);
+    btn.onclick=()=>answer(c,q.ans,btn);
+    el.appendChild(btn);
+  });
+
+  document.getElementById('nextBtn').textContent=current===19?'けっか見る ✓':'つぎへ →';
+}
+
+function answer(selected,correct,btn){
+  if(answered) return;
+  answered=true;
+  document.querySelectorAll('.choice').forEach(b=>{
+    b.classList.add('disabled');
+    const f=b.querySelector('.frac');
+    // 正解のボタンを緑に
+    const sn=parseInt(b.querySelector('.frac-num')?.textContent||b.querySelector('.frac')?.textContent);
+    const sd=parseInt(b.querySelector('.frac-den')?.textContent||1);
+    if(sn===correct.n&&sd===correct.d) b.classList.add('correct');
+  });
+  const r=document.getElementById('result');
+  if(selected.n===correct.n&&selected.d===correct.d){
+    btn.classList.add('correct');
+    r.className='result ok';r.textContent='⭕ 正解！';
+    score++;
+  } else {
+    btn.classList.add('wrong');
+    r.className='result ng';
+    r.textContent=`❌ 正解は ${correct.d===1?correct.n:correct.n+'/'+correct.d}`;
+    misses.push(questions[current]);
+  }
+  document.getElementById('scoreText').textContent='正解: '+score;
+  document.getElementById('nextBtn').style.display='block';
+}
+
+function next(){
+  if(current===19){showResult();}
+  else{current++;updateDisplay();}
+}
+
+function showResult(){
+  document.getElementById('mainCard').style.display='none';
+  const rs=document.getElementById('resultScreen');
+  rs.style.display='flex';
+  document.getElementById('finalScore').textContent=score;
+  const ml=document.getElementById('missList');
+  if(misses.length===0){
+    ml.innerHTML='<div style="text-align:center;color:#27ae60;font-weight:700;font-size:12pt">全問正解！🎉</div>';
+  } else {
+    const op=mode==='add'?'+':'−';
+    ml.innerHTML='<div class="miss-title">まちがえた問題</div>'+
+      misses.map(m=>`<div class="miss-item">
+        <div class="miss-prob">${fracHTML(m.n1,m.d1)} ${op} ${fracHTML(m.n2,m.d2)}</div>
+        <div class="miss-ans">＝ ${fracHTML(m.ans.n,m.ans.d)}</div>
+      </div>`).join('');
+  }
+}
+
+function retry(){
+  document.getElementById('resultScreen').style.display='none';
+  document.getElementById('mainCard').style.display='flex';
+  init();
+}
+
+init();
+</script>
+</body>
+</html>

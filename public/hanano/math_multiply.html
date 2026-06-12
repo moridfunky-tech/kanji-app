@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>かけ算クイズ 5年生</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans JP','IPAGothic',sans-serif;background:#f0f7fc;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+.back{align-self:flex-start;font-size:10pt;color:#2980b9;text-decoration:none;background:white;padding:6px 14px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:16px}
+h1{font-size:16pt;font-weight:700;color:#2980b9;margin-bottom:16px}
+.level-btns{display:flex;gap:10px;margin-bottom:16px}
+.level-btn{padding:8px 20px;border-radius:20px;border:2px solid #2980b9;font-size:10pt;font-weight:700;cursor:pointer;background:white;color:#2980b9}
+.level-btn.active{background:#2980b9;color:white}
+.card{background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);padding:24px 20px;width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:20px}
+.progress-wrap{width:100%;display:flex;justify-content:space-between}
+.progress-text{font-size:9pt;color:#aaa}
+.progress-bar{width:100%;height:6px;background:#e0eef6;border-radius:3px;margin-top:4px}
+.progress-fill{height:6px;background:#2980b9;border-radius:3px;transition:width 0.3s}
+.problem{font-size:26pt;font-weight:700;color:#1a1a2e;border:2px solid #b8d4e8;border-radius:12px;padding:16px 28px;background:#f0f7fc;width:100%;text-align:center;font-family:'Arial',sans-serif}
+.choices{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice{background:#f0f7fc;border:2px solid #b8d4e8;border-radius:10px;padding:14px;font-size:16pt;font-weight:700;color:#1a1a2e;text-align:center;cursor:pointer;transition:all 0.15s;font-family:'Arial',sans-serif}
+.choice:hover{background:#d6eaf8;border-color:#2980b9}
+.choice.correct{background:#f0fff4;border-color:#27ae60;color:#27ae60}
+.choice.wrong{background:#fff5f5;border-color:#c0392b;color:#c0392b}
+.choice.disabled{cursor:not-allowed}
+.result{font-size:14pt;font-weight:700;min-height:28px;text-align:center}
+.result.ok{color:#27ae60}
+.result.ng{color:#c0392b}
+.btn-next{background:#2980b9;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:12pt;font-weight:700;cursor:pointer;display:none;width:100%}
+.result-screen{background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);padding:32px 24px;width:100%;max-width:400px;display:none;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.final-score{font-size:52pt;font-weight:700;color:#2980b9;line-height:1}
+.final-total{font-size:14pt;color:#aaa}
+.miss-list{width:100%;text-align:left}
+.miss-title{font-size:10pt;color:#888;margin-bottom:8px;font-weight:700}
+.miss-item{display:flex;align-items:center;gap:12px;padding:8px;border-bottom:1px solid #e0eef6}
+.miss-prob{color:#1a1a2e;font-family:'Arial',sans-serif;font-weight:700;flex:1;font-size:12pt}
+.miss-ans{color:#27ae60;font-weight:700;font-family:'Arial',sans-serif}
+.btn-retry{background:#2980b9;color:white;padding:12px 32px;border-radius:8px;border:none;font-size:12pt;font-weight:700;cursor:pointer;width:100%}
+</style>
+</head>
+<body>
+<a class="back" href="math.html">← 戻る</a>
+<h1>✖️ かけ算クイズ</h1>
+<div class="level-btns">
+  <button class="level-btn active" id="lvl2" onclick="setLevel(2)">3桁×1桁</button>
+  <button class="level-btn" id="lvl3" onclick="setLevel(3)">3桁×2桁</button>
+  <button class="level-btn" id="lvl4" onclick="setLevel(4)">4桁×2桁</button>
+</div>
+<div class="card" id="mainCard">
+  <div style="width:100%">
+    <div class="progress-wrap">
+      <div class="progress-text" id="progressText">1 / 20</div>
+      <div class="progress-text" id="scoreText">正解: 0</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:5%"></div></div>
+  </div>
+  <div class="problem" id="problem">123 × 4 = ?</div>
+  <div class="choices" id="choices"></div>
+  <div class="result" id="result"></div>
+  <button class="btn-next" id="nextBtn" onclick="next()">つぎへ →</button>
+</div>
+<div class="result-screen" id="resultScreen">
+  <div>🎉 おわった！</div>
+  <div class="final-score" id="finalScore">0</div>
+  <div class="final-total">/ 20問</div>
+  <div class="miss-list" id="missList"></div>
+  <button class="btn-retry" onclick="retry()">もういちど</button>
+</div>
+<script>
+let level=2, questions=[], current=0, score=0, misses=[], answered=false;
+
+function setLevel(l){
+  level=l;
+  [2,3,4].forEach(n=>{
+    document.getElementById('lvl'+n).className='level-btn'+(n===l?' active':'');
+  });
+  document.getElementById('resultScreen').style.display='none';
+  document.getElementById('mainCard').style.display='flex';
+  init();
+}
+
+function genQuestions(n){
+  const qs=[], used=new Set();
+  let tries=0;
+  while(qs.length<n && tries<300){
+    tries++;
+    let a, b;
+    if(level===2){
+      a=Math.floor(Math.random()*801)+100; // 100〜900
+      b=Math.floor(Math.random()*8)+2;     // 2〜9
+    } else if(level===3){
+      a=Math.floor(Math.random()*801)+100; // 100〜900
+      b=Math.floor(Math.random()*81)+12;   // 12〜92
+    } else {
+      a=Math.floor(Math.random()*8001)+1000; // 1000〜9000
+      b=Math.floor(Math.random()*81)+12;     // 12〜92
+    }
+    const key=a+'×'+b;
+    if(used.has(key)) continue;
+    used.add(key);
+    qs.push({a,b,ans:a*b});
+  }
+  return qs;
+}
+
+function shuffle(arr){return [...arr].sort(()=>Math.random()-0.5)}
+
+function getChoices(correct){
+  const wrong=new Set();
+  while(wrong.size<3){
+    const offset=Math.floor(Math.random()*50)+1;
+    const sign=Math.random()<0.5?1:-1;
+    const w=correct+sign*offset;
+    if(w>0&&w!==correct) wrong.add(w);
+  }
+  return shuffle([correct,...wrong]);
+}
+
+function init(){
+  questions=genQuestions(20);
+  current=0;score=0;misses=[];answered=false;
+  updateDisplay();
+}
+
+function updateDisplay(){
+  answered=false;
+  const q=questions[current];
+  document.getElementById('problem').textContent=q.a+' × '+q.b+' = ?';
+  document.getElementById('progressText').textContent=(current+1)+' / 20';
+  document.getElementById('scoreText').textContent='正解: '+score;
+  document.getElementById('progressFill').style.width=((current/20)*100)+'%';
+  document.getElementById('result').textContent='';
+  document.getElementById('result').className='result';
+  document.getElementById('nextBtn').style.display='none';
+
+  const choices=getChoices(q.ans);
+  const el=document.getElementById('choices');
+  el.innerHTML='';
+  choices.forEach(c=>{
+    const btn=document.createElement('div');
+    btn.className='choice';
+    btn.textContent=c;
+    btn.onclick=()=>answer(c,q.ans,btn,q);
+    el.appendChild(btn);
+  });
+
+  document.getElementById('nextBtn').textContent=current===19?'けっか見る ✓':'つぎへ →';
+}
+
+function answer(selected,correct,btn,q){
+  if(answered) return;
+  answered=true;
+  document.querySelectorAll('.choice').forEach(b=>{
+    b.classList.add('disabled');
+    if(parseInt(b.textContent)===correct) b.classList.add('correct');
+  });
+  const r=document.getElementById('result');
+  if(selected===correct){
+    btn.classList.add('correct');
+    r.className='result ok';r.textContent='⭕ 正解！';
+    score++;
+  } else {
+    btn.classList.add('wrong');
+    r.className='result ng';r.textContent='❌ 正解は '+correct;
+    misses.push(q);
+  }
+  document.getElementById('scoreText').textContent='正解: '+score;
+  document.getElementById('nextBtn').style.display='block';
+}
+
+function next(){
+  if(current===19){showResult();}
+  else{current++;updateDisplay();}
+}
+
+function showResult(){
+  document.getElementById('mainCard').style.display='none';
+  const rs=document.getElementById('resultScreen');
+  rs.style.display='flex';
+  document.getElementById('finalScore').textContent=score;
+  const ml=document.getElementById('missList');
+  if(misses.length===0){
+    ml.innerHTML='<div style="text-align:center;color:#27ae60;font-weight:700;font-size:12pt">全問正解！🎉</div>';
+  } else {
+    ml.innerHTML='<div class="miss-title">まちがえた問題</div>'+
+      misses.map(m=>`<div class="miss-item"><div class="miss-prob">${m.a} × ${m.b}</div><div class="miss-ans">= ${m.ans}</div></div>`).join('');
+  }
+}
+
+function retry(){
+  document.getElementById('resultScreen').style.display='none';
+  document.getElementById('mainCard').style.display='flex';
+  init();
+}
+
+init();
+</script>
+</body>
+</html>
