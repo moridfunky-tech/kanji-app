@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>筆算練習</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans JP','IPAGothic',sans-serif;background:#f0f7fc;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+.back{align-self:flex-start;font-size:10pt;color:#2980b9;text-decoration:none;background:white;padding:6px 14px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:16px}
+h1{font-size:16pt;font-weight:700;color:#2980b9;margin-bottom:16px}
+.mode-btns{display:flex;gap:8px;margin-bottom:16px}
+.mode-btn{padding:8px 18px;border-radius:20px;border:2px solid #2980b9;font-size:10pt;font-weight:700;cursor:pointer;background:white;color:#2980b9}
+.mode-btn.active{background:#2980b9;color:white}
+.card{background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);padding:24px 20px;width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:16px}
+.progress-wrap{width:100%;display:flex;justify-content:space-between}
+.progress-text{font-size:9pt;color:#aaa}
+.progress-bar{width:100%;height:6px;background:#e0eef6;border-radius:3px;margin-top:4px}
+.progress-fill{height:6px;background:#2980b9;border-radius:3px;transition:width 0.3s}
+
+/* 筆算表示 */
+.hissan-box{
+  background:#f0f7fc;border:2px solid #b8d4e8;border-radius:12px;
+  padding:16px 24px;width:100%;
+  display:flex;flex-direction:column;align-items:flex-end;
+  font-family:'Arial','Helvetica',sans-serif;
+}
+.hissan-num{font-size:32pt;font-weight:700;color:#1a1a2e;line-height:1.2}
+.hissan-op-row{display:flex;align-items:center;gap:8px;width:100%;justify-content:flex-start}
+.hissan-op{font-size:28pt;font-weight:700;color:#2980b9;min-width:32px}
+.hissan-line{border-top:3px solid #1a1a2e;width:100%;margin:4px 0}
+
+/* キャンバス */
+.canvas-wrap{
+  position:relative;width:100%;height:180px;
+  border:2px solid #b8d4e8;border-radius:8px;
+  background:white;cursor:crosshair;
+}
+.canvas-hint{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:10pt;color:#ddd;pointer-events:none;
+}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+
+/* 答え入力 */
+.answer-row{display:flex;align-items:center;gap:12px;width:100%}
+.answer-label{font-size:11pt;color:#555;font-weight:700}
+.answer-input{
+  flex:1;border:2px solid #b8d4e8;border-radius:8px;
+  padding:10px;font-size:20pt;font-weight:700;color:#1a1a2e;
+  font-family:'Arial',sans-serif;text-align:center;outline:none;
+}
+.answer-input:focus{border-color:#2980b9}
+.answer-input.correct{border-color:#27ae60;background:#f0fff4;color:#27ae60}
+.answer-input.wrong{border-color:#2980b9;background:#f0f7fc;color:#2980b9}
+
+.result{font-size:14pt;font-weight:700;min-height:28px;text-align:center}
+.result.ok{color:#27ae60}
+.result.ng{color:#2980b9}
+
+.btns{display:flex;gap:10px;width:100%}
+.btn{padding:10px 0;border-radius:8px;border:none;font-size:11pt;font-weight:700;cursor:pointer;flex:1}
+.btn-clear{background:#f5f5f5;color:#555}
+.btn-check{background:#2980b9;color:white}
+.btn-check:disabled{opacity:0.5;cursor:not-allowed}
+.btn-next{background:#27ae60;color:white;display:none;width:100%;padding:12px;border-radius:8px;border:none;font-size:12pt;font-weight:700;cursor:pointer}
+
+/* 結果画面 */
+.result-screen{background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);padding:32px 24px;width:100%;max-width:400px;display:none;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.final-score{font-size:52pt;font-weight:700;color:#2980b9;line-height:1}
+.final-total{font-size:14pt;color:#aaa}
+.miss-list{width:100%;text-align:left}
+.miss-title{font-size:10pt;color:#888;margin-bottom:8px;font-weight:700}
+.miss-item{display:flex;align-items:center;gap:12px;padding:8px;border-bottom:1px solid #e0eef6;font-family:'Arial',sans-serif;font-weight:700;font-size:12pt}
+.miss-prob{flex:1;color:#1a1a2e}
+.miss-ans{color:#27ae60}
+.btn-retry{background:#2980b9;color:white;padding:12px 32px;border-radius:8px;border:none;font-size:12pt;font-weight:700;cursor:pointer;width:100%}
+</style>
+</head>
+<body>
+<a class="back" href="math.html">← 戻る</a>
+<h1>📝 筆算練習</h1>
+<div class="mode-btns">
+  <button class="mode-btn active" id="modeMul" onclick="setMode('mul')">かけ算</button>
+  <button class="mode-btn" id="modeDiv" onclick="setMode('div')">わり算</button>
+</div>
+
+<div class="card" id="mainCard">
+  <div style="width:100%">
+    <div class="progress-wrap">
+      <div class="progress-text" id="progressText">1 / 10</div>
+      <div class="progress-text" id="scoreText">正解: 0</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:10%"></div></div>
+  </div>
+
+  <div class="hissan-box" id="hissanBox"></div>
+
+  <div class="canvas-wrap" id="canvasWrap">
+    <div class="canvas-hint">ここに筆算を書いてね</div>
+    <canvas id="cv" width="800" height="360"></canvas>
+  </div>
+
+  <div class="answer-row">
+    <div class="answer-label">答え：</div>
+    <input class="answer-input" type="number" id="answerInput" placeholder="?">
+  </div>
+
+  <div class="result" id="result"></div>
+
+  <div class="btns">
+    <button class="btn btn-clear" onclick="clearCanvas()">消す</button>
+    <button class="btn btn-check" id="checkBtn" onclick="checkAnswer()">確認する</button>
+  </div>
+  <button class="btn-next" id="nextBtn" onclick="next()">つぎへ →</button>
+</div>
+
+<div class="result-screen" id="resultScreen">
+  <div>🎉 おわった！</div>
+  <div class="final-score" id="finalScore">0</div>
+  <div class="final-total">/ 10問</div>
+  <div class="miss-list" id="missList"></div>
+  <button class="btn-retry" onclick="retry()">もういちど</button>
+</div>
+
+<script>
+let mode='mul', questions=[], current=0, score=0, misses=[], answered=false;
+
+function setMode(m){
+  mode=m;
+  document.getElementById('modeMul').className='mode-btn'+(m==='mul'?' active':'');
+  document.getElementById('modeDiv').className='mode-btn'+(m==='div'?' active':'');
+  document.getElementById('resultScreen').style.display='none';
+  document.getElementById('mainCard').style.display='flex';
+  init();
+}
+
+function genQuestions(n){
+  const qs=[], used=new Set();
+  let tries=0;
+  while(qs.length<n&&tries<200){
+    tries++;
+    let a,b,ans;
+    if(mode==='mul'){
+      a=Math.floor(Math.random()*81)+12; // 12〜92
+      b=Math.floor(Math.random()*8)+2;   // 2〜9
+      ans=a*b;
+    } else {
+      b=Math.floor(Math.random()*8)+2;
+      const q=Math.floor(Math.random()*20)+5;
+      a=b*q;
+      ans=q;
+    }
+    const key=a+'op'+b;
+    if(used.has(key)) continue;
+    used.add(key);
+    qs.push({a,b,ans});
+  }
+  return qs;
+}
+
+function shuffle(arr){return [...arr].sort(()=>Math.random()-0.5)}
+
+function init(){
+  questions=genQuestions(10);
+  current=0;score=0;misses=[];answered=false;
+  updateDisplay();
+}
+
+function updateDisplay(){
+  answered=false;
+  const q=questions[current];
+  document.getElementById('progressText').textContent=(current+1)+' / 10';
+  document.getElementById('scoreText').textContent='正解: '+score;
+  document.getElementById('progressFill').style.width=((current/10)*100)+'%';
+  document.getElementById('result').textContent='';
+  document.getElementById('result').className='result';
+  document.getElementById('nextBtn').style.display='none';
+  document.getElementById('checkBtn').style.display='block';
+  document.getElementById('checkBtn').disabled=false;
+
+  const ai=document.getElementById('answerInput');
+  ai.value='';
+  ai.className='answer-input';
+  ai.disabled=false;
+
+  // 筆算表示
+  const box=document.getElementById('hissanBox');
+  const op=mode==='mul'?'×':'÷';
+  box.innerHTML=`
+    <div class="hissan-num">${q.a}</div>
+    <div class="hissan-op-row">
+      <div class="hissan-op">${op}</div>
+      <div class="hissan-num">${q.b}</div>
+    </div>
+    <div class="hissan-line"></div>
+  `;
+
+  document.getElementById('nextBtn').textContent=current===9?'けっか見る ✓':'つぎへ →';
+  clearCanvas();
+}
+
+// キャンバス
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+ctx.strokeStyle='#1a1a2e';ctx.lineWidth=5;ctx.lineCap='round';ctx.lineJoin='round';
+let drawing=false;
+
+function pos(e){
+  const r=cv.getBoundingClientRect();
+  const sx=cv.width/r.width,sy=cv.height/r.height;
+  const cx=e.touches?e.touches[0].clientX:e.clientX;
+  const cy=e.touches?e.touches[0].clientY:e.clientY;
+  return{x:(cx-r.left)*sx,y:(cy-r.top)*sy};
+}
+cv.addEventListener('mousedown',e=>{drawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)});
+cv.addEventListener('mousemove',e=>{if(!drawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()});
+cv.addEventListener('mouseup',()=>drawing=false);
+cv.addEventListener('mouseleave',()=>drawing=false);
+cv.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y)},{passive:false});
+cv.addEventListener('touchmove',e=>{e.preventDefault();if(!drawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke()},{passive:false});
+cv.addEventListener('touchend',()=>drawing=false);
+
+function clearCanvas(){ctx.clearRect(0,0,cv.width,cv.height)}
+
+function checkAnswer(){
+  if(answered) return;
+  const q=questions[current];
+  const val=parseInt(document.getElementById('answerInput').value);
+  const ai=document.getElementById('answerInput');
+  const r=document.getElementById('result');
+
+  if(isNaN(val)){
+    r.className='result ng';r.textContent='答えを入力してね';
+    return;
+  }
+
+  answered=true;
+  ai.disabled=true;
+  document.getElementById('checkBtn').style.display='none';
+
+  if(val===q.ans){
+    ai.className='answer-input correct';
+    r.className='result ok';r.textContent='⭕ 正解！';
+    score++;
+  } else {
+    ai.className='answer-input wrong';
+    r.className='result ng';r.textContent='❌ 正解は '+q.ans;
+    misses.push(q);
+  }
+  document.getElementById('scoreText').textContent='正解: '+score;
+  document.getElementById('nextBtn').style.display='block';
+}
+
+function next(){
+  if(current===9){showResult();}
+  else{current++;updateDisplay();}
+}
+
+function showResult(){
+  document.getElementById('mainCard').style.display='none';
+  const rs=document.getElementById('resultScreen');
+  rs.style.display='flex';
+  document.getElementById('finalScore').textContent=score;
+  const ml=document.getElementById('missList');
+  const op=mode==='mul'?'×':'÷';
+  if(misses.length===0){
+    ml.innerHTML='<div style="text-align:center;color:#27ae60;font-weight:700;font-size:12pt">全問正解！🎉</div>';
+  } else {
+    ml.innerHTML='<div class="miss-title">まちがえた問題</div>'+
+      misses.map(m=>`<div class="miss-item"><div class="miss-prob">${m.a} ${op} ${m.b}</div><div class="miss-ans">= ${m.ans}</div></div>`).join('');
+  }
+}
+
+function retry(){
+  document.getElementById('resultScreen').style.display='none';
+  document.getElementById('mainCard').style.display='flex';
+  init();
+}
+
+init();
+</script>
+</body>
+</html>
