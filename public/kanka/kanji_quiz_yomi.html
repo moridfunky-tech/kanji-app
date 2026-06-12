@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>漢字クイズ 読み</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Noto Sans JP','IPAGothic',sans-serif;
+  background:#fff5f5;min-height:100vh;
+  display:flex;flex-direction:column;align-items:center;
+  padding:16px;
+}
+.back{
+  align-self:flex-start;font-size:10pt;color:#c0392b;text-decoration:none;
+  background:white;padding:6px 14px;border-radius:20px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:16px;
+}
+h1{font-size:16pt;font-weight:700;color:#c0392b;margin-bottom:16px}
+.card{
+  background:white;border-radius:16px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);
+  padding:24px 20px;width:100%;max-width:400px;
+  display:flex;flex-direction:column;align-items:center;gap:20px;
+}
+.progress-wrap{width:100%;display:flex;justify-content:space-between;align-items:center}
+.progress-bar{width:100%;height:6px;background:#f0e8e8;border-radius:3px;margin-top:4px}
+.progress-fill{height:6px;background:#c0392b;border-radius:3px;transition:width 0.3s}
+.progress-text{font-size:9pt;color:#aaa}
+.score-text{font-size:9pt;color:#aaa}
+
+.kanji{
+  font-size:80pt;font-weight:700;color:#1a1a2e;
+  font-family:serif;line-height:1;
+  border:2px solid #e0d0cc;border-radius:12px;
+  padding:12px 24px;background:#fffaf8;
+}
+.question{font-size:12pt;color:#555;font-weight:700}
+
+.choices{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.choice{
+  background:#f9f5f5;border:2px solid #e0d0cc;border-radius:10px;
+  padding:14px;font-size:16pt;font-weight:700;color:#1a1a2e;
+  text-align:center;cursor:pointer;transition:all 0.15s;
+}
+.choice:hover{background:#fff0f0;border-color:#c0392b}
+.choice.correct{background:#f0fff4;border-color:#27ae60;color:#27ae60}
+.choice.wrong{background:#fff5f5;border-color:#c0392b;color:#c0392b}
+.choice.disabled{cursor:not-allowed;opacity:0.6}
+
+.result{font-size:14pt;font-weight:700;min-height:28px;text-align:center}
+.result.ok{color:#27ae60}
+.result.ng{color:#c0392b}
+
+.btn-next{
+  background:#c0392b;color:white;border:none;
+  padding:12px 32px;border-radius:8px;font-size:12pt;font-weight:700;
+  cursor:pointer;display:none;width:100%;
+}
+.btn-next:hover{background:#a93226}
+
+/* 結果画面 */
+.result-screen{
+  background:white;border-radius:16px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.08);
+  padding:32px 24px;width:100%;max-width:400px;
+  display:none;flex-direction:column;align-items:center;gap:16px;text-align:center;
+}
+.final-score{font-size:52pt;font-weight:700;color:#c0392b;line-height:1}
+.final-total{font-size:14pt;color:#aaa}
+.miss-list{width:100%;text-align:left}
+.miss-title{font-size:10pt;color:#888;margin-bottom:8px;font-weight:700}
+.miss-item{
+  display:flex;align-items:center;gap:12px;
+  padding:8px;border-bottom:1px solid #f0e8e8;font-size:12pt;
+}
+.miss-kanji{font-size:20pt;font-weight:700;color:#c0392b;font-family:serif;min-width:36px}
+.miss-ans{color:#27ae60;font-weight:700}
+.miss-your{color:#aaa;font-size:10pt}
+.btn-retry{
+  background:#c0392b;color:white;padding:12px 32px;border-radius:8px;
+  border:none;font-size:12pt;font-weight:700;cursor:pointer;width:100%;
+}
+</style>
+</head>
+<body>
+<a class="back" href="quiz.html">← 戻る</a>
+<h1>📖 読みクイズ</h1>
+
+<div class="card" id="mainCard">
+  <div style="width:100%">
+    <div class="progress-wrap">
+      <div class="progress-text" id="progressText">1 / 25</div>
+      <div class="score-text" id="scoreText">正解: 0</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:4%"></div></div>
+  </div>
+  <div class="kanji" id="kanjiDisp">悪</div>
+  <div class="question">この漢字の読みは？</div>
+  <div class="choices" id="choices"></div>
+  <div class="result" id="result"></div>
+  <button class="btn-next" id="nextBtn" onclick="next()">つぎへ →</button>
+</div>
+
+<div class="result-screen" id="resultScreen">
+  <div>🎉 おわった！</div>
+  <div class="final-score" id="finalScore">0</div>
+  <div class="final-total" id="finalTotal">/ 25問</div>
+  <div class="miss-list" id="missList"></div>
+  <button class="btn-retry" onclick="retry()">もういちど</button>
+</div>
+
+<script>
+const allKanji = [
+  {k:'悪',y:'わるい'},{k:'安',y:'やすい'},{k:'暗',y:'くらい'},{k:'医',y:'い'},{k:'委',y:'い'},
+  {k:'育',y:'そだてる'},{k:'員',y:'いん'},{k:'院',y:'いん'},{k:'飲',y:'のむ'},{k:'運',y:'はこぶ'},
+  {k:'泳',y:'およぐ'},{k:'駅',y:'えき'},{k:'央',y:'まんなか'},{k:'横',y:'よこ'},{k:'屋',y:'や'},
+  {k:'化',y:'かわる'},{k:'荷',y:'に'},{k:'界',y:'かい'},{k:'階',y:'かい'},{k:'寒',y:'さむい'},
+  {k:'感',y:'かん'},{k:'岸',y:'きし'},{k:'期',y:'き'},{k:'客',y:'きゃく'},{k:'究',y:'きわめる'},
+];
+
+// シャッフル
+function shuffle(arr){return [...arr].sort(()=>Math.random()-0.5)}
+
+let questions = [];
+let current = 0;
+let score = 0;
+let misses = [];
+let answered = false;
+
+function init(){
+  questions = shuffle(allKanji);
+  current = 0; score = 0; misses = []; answered = false;
+  updateDisplay();
+}
+
+function getChoices(correct, all){
+  const wrong = shuffle(all.filter(k=>k.y!==correct.y)).slice(0,3);
+  return shuffle([correct, ...wrong]);
+}
+
+function updateDisplay(){
+  answered = false;
+  const q = questions[current];
+  document.getElementById('kanjiDisp').textContent = q.k;
+  document.getElementById('progressText').textContent = (current+1)+' / '+questions.length;
+  document.getElementById('scoreText').textContent = '正解: '+score;
+  document.getElementById('progressFill').style.width = ((current/questions.length)*100)+'%';
+  document.getElementById('result').textContent = '';
+  document.getElementById('result').className = 'result';
+  document.getElementById('nextBtn').style.display = 'none';
+
+  const choices = getChoices(q, allKanji);
+  const choicesEl = document.getElementById('choices');
+  choicesEl.innerHTML = '';
+  choices.forEach(c=>{
+    const btn = document.createElement('div');
+    btn.className = 'choice';
+    btn.textContent = c.y;
+    btn.onclick = ()=>answer(c.y, q.y, btn);
+    choicesEl.appendChild(btn);
+  });
+
+  const nb = document.getElementById('nextBtn');
+  nb.textContent = current===questions.length-1 ? 'けっか見る ✓' : 'つぎへ →';
+}
+
+function answer(selected, correct, btn){
+  if(answered) return;
+  answered = true;
+
+  const all = document.querySelectorAll('.choice');
+  all.forEach(b=>{
+    b.classList.add('disabled');
+    if(b.textContent===correct) b.classList.add('correct');
+  });
+
+  const r = document.getElementById('result');
+  if(selected===correct){
+    btn.classList.add('correct');
+    r.className='result ok'; r.textContent='⭕ 正解！';
+    score++;
+  } else {
+    btn.classList.add('wrong');
+    r.className='result ng'; r.textContent='❌ 正解は「'+correct+'」';
+    misses.push(questions[current]);
+  }
+  document.getElementById('scoreText').textContent='正解: '+score;
+  document.getElementById('nextBtn').style.display='block';
+}
+
+function next(){
+  if(current===questions.length-1){
+    showResult();
+  } else {
+    current++;
+    updateDisplay();
+  }
+}
+
+function showResult(){
+  document.getElementById('mainCard').style.display='none';
+  const rs = document.getElementById('resultScreen');
+  rs.style.display='flex';
+  document.getElementById('finalScore').textContent=score;
+  document.getElementById('finalTotal').textContent='/ '+questions.length+'問';
+
+  const ml = document.getElementById('missList');
+  if(misses.length===0){
+    ml.innerHTML='<div style="text-align:center;color:#27ae60;font-weight:700;font-size:12pt">全問正解！🎉</div>';
+  } else {
+    ml.innerHTML='<div class="miss-title">まちがえた漢字</div>'+
+      misses.map(m=>`<div class="miss-item"><div class="miss-kanji">${m.k}</div><div class="miss-ans">→ ${m.y}</div></div>`).join('');
+  }
+}
+
+function retry(){
+  document.getElementById('resultScreen').style.display='none';
+  document.getElementById('mainCard').style.display='flex';
+  init();
+}
+
+init();
+</script>
+</body>
+</html>

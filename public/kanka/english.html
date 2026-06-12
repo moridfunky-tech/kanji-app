@@ -6,13 +6,13 @@
 <title>英語 単語練習</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Noto Sans JP','IPAGothic',sans-serif;background:#f0f7fc;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
-.back{align-self:flex-start;font-size:10pt;color:#2980b9;text-decoration:none;background:white;padding:6px 14px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:16px}
-h1{font-size:16pt;font-weight:700;color:#2980b9;margin-bottom:16px}
+body{font-family:'Noto Sans JP','IPAGothic',sans-serif;background:#fff5f5;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px}
+.back{align-self:flex-start;font-size:10pt;color:#c0392b;text-decoration:none;background:white;padding:6px 14px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:16px}
+h1{font-size:16pt;font-weight:700;color:#c0392b;margin-bottom:16px}
 
 .mode-btns{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;justify-content:center}
-.mode-btn{padding:10px 20px;border-radius:20px;border:2px solid #2980b9;font-size:10pt;font-weight:700;cursor:pointer;background:white;color:#2980b9;transition:all 0.2s}
-.mode-btn.active{background:#2980b9;color:white}
+.mode-btn{padding:10px 20px;border-radius:20px;border:2px solid #c0392b;font-size:10pt;font-weight:700;cursor:pointer;background:white;color:#c0392b;transition:all 0.2s}
+.mode-btn.active{background:#c0392b;color:white}
 
 /* カードモード */
 .flashcard-wrap{width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:16px}
@@ -22,55 +22,55 @@ h1{font-size:16pt;font-weight:700;color:#2980b9;margin-bottom:16px}
   padding:32px 24px;
   display:flex;flex-direction:column;align-items:center;gap:16px;
   cursor:pointer;min-height:200px;justify-content:center;
-  border:2px solid #b8d4e8;transition:transform 0.2s;
+  border:2px solid #e0d0cc;transition:transform 0.2s;
 }
 .flashcard:hover{transform:scale(1.02)}
-.card-en{font-size:48pt;font-weight:700;color:#2980b9;font-family:'Arial',sans-serif;line-height:1}
+.card-en{font-size:48pt;font-weight:700;color:#c0392b;font-family:'Arial',sans-serif;line-height:1}
 .card-ja{font-size:20pt;font-weight:700;color:#555;display:none}
 .card-category{font-size:8pt;color:#aaa;text-transform:uppercase;letter-spacing:0.1em}
 .card-hint{font-size:9pt;color:#aaa}
 .speak-btn{
-  background:#2980b9;color:white;border:none;
+  background:#c0392b;color:white;border:none;
   padding:10px 24px;border-radius:20px;font-size:11pt;font-weight:700;cursor:pointer;
 }
 .speak-btn:hover{background:#2471a3}
 .card-nav{display:flex;gap:12px;align-items:center}
-.nav-btn{background:white;border:2px solid #b8d4e8;border-radius:8px;padding:8px 20px;font-size:11pt;font-weight:700;color:#2980b9;cursor:pointer}
-.nav-btn:hover{background:#d6eaf8}
+.nav-btn{background:white;border:2px solid #e0d0cc;border-radius:8px;padding:8px 20px;font-size:11pt;font-weight:700;color:#c0392b;cursor:pointer}
+.nav-btn:hover{background:#fff0f0}
 .card-counter{font-size:10pt;color:#aaa}
 
 /* クイズモード共通 */
 .quiz-wrap{width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:18px}
 .progress-wrap{width:100%;display:flex;justify-content:space-between}
 .progress-text{font-size:9pt;color:#aaa}
-.progress-bar{width:100%;height:6px;background:#e0eef6;border-radius:3px;margin-top:4px}
-.progress-fill{height:6px;background:#2980b9;border-radius:3px;transition:width 0.3s}
-.question-box{background:white;border:2px solid #b8d4e8;border-radius:12px;padding:24px;width:100%;text-align:center}
-.q-en{font-size:36pt;font-weight:700;color:#2980b9;font-family:'Arial',sans-serif;line-height:1}
+.progress-bar{width:100%;height:6px;background:#f0e8e8;border-radius:3px;margin-top:4px}
+.progress-fill{height:6px;background:#c0392b;border-radius:3px;transition:width 0.3s}
+.question-box{background:white;border:2px solid #e0d0cc;border-radius:12px;padding:24px;width:100%;text-align:center}
+.q-en{font-size:36pt;font-weight:700;color:#c0392b;font-family:'Arial',sans-serif;line-height:1}
 .q-ja{font-size:24pt;font-weight:700;color:#1a1a2e}
-.q-speak{background:#e8f4fc;border:none;border-radius:20px;padding:6px 16px;font-size:10pt;color:#2980b9;cursor:pointer;font-weight:700;margin-top:8px}
+.q-speak{background:#e8f4fc;border:none;border-radius:20px;padding:6px 16px;font-size:10pt;color:#c0392b;cursor:pointer;font-weight:700;margin-top:8px}
 .choices{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.choice{background:#f0f7fc;border:2px solid #b8d4e8;border-radius:10px;padding:14px;font-size:14pt;font-weight:700;color:#1a1a2e;text-align:center;cursor:pointer;transition:all 0.15s;font-family:'Arial',sans-serif}
+.choice{background:#fff5f5;border:2px solid #e0d0cc;border-radius:10px;padding:14px;font-size:14pt;font-weight:700;color:#1a1a2e;text-align:center;cursor:pointer;transition:all 0.15s;font-family:'Arial',sans-serif}
 .choice.ja{font-family:'Noto Sans JP',sans-serif;font-size:13pt}
-.choice:hover{background:#d6eaf8;border-color:#2980b9}
+.choice:hover{background:#fff0f0;border-color:#c0392b}
 .choice.correct{background:#f0fff4;border-color:#27ae60;color:#27ae60}
 .choice.wrong{background:#fff5f5;border-color:#c0392b;color:#c0392b}
 .choice.disabled{cursor:not-allowed}
 .result{font-size:14pt;font-weight:700;min-height:28px;text-align:center}
 .result.ok{color:#27ae60}
 .result.ng{color:#c0392b}
-.btn-next{background:#2980b9;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:12pt;font-weight:700;cursor:pointer;display:none;width:100%}
+.btn-next{background:#c0392b;color:white;border:none;padding:12px 32px;border-radius:8px;font-size:12pt;font-weight:700;cursor:pointer;display:none;width:100%}
 
 /* 結果画面 */
 .result-screen{background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);padding:32px 24px;width:100%;max-width:400px;display:none;flex-direction:column;align-items:center;gap:16px;text-align:center}
-.final-score{font-size:52pt;font-weight:700;color:#2980b9;line-height:1}
+.final-score{font-size:52pt;font-weight:700;color:#c0392b;line-height:1}
 .final-total{font-size:14pt;color:#aaa}
 .miss-list{width:100%;text-align:left;max-height:250px;overflow-y:auto}
 .miss-title{font-size:10pt;color:#888;margin-bottom:8px;font-weight:700}
-.miss-item{display:flex;align-items:center;gap:12px;padding:8px;border-bottom:1px solid #e0eef6}
-.miss-en{font-size:16pt;font-weight:700;color:#2980b9;font-family:'Arial',sans-serif;min-width:80px}
+.miss-item{display:flex;align-items:center;gap:12px;padding:8px;border-bottom:1px solid #f0e8e8}
+.miss-en{font-size:16pt;font-weight:700;color:#c0392b;font-family:'Arial',sans-serif;min-width:80px}
 .miss-ja{font-size:12pt;color:#27ae60;font-weight:700}
-.btn-retry{background:#2980b9;color:white;padding:12px 32px;border-radius:8px;border:none;font-size:12pt;font-weight:700;cursor:pointer;width:100%}
+.btn-retry{background:#c0392b;color:white;padding:12px 32px;border-radius:8px;border:none;font-size:12pt;font-weight:700;cursor:pointer;width:100%}
 </style>
 </head>
 <body>
