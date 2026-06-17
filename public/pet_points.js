@@ -1,4 +1,4 @@
-// ポイント付与ユーティリティ（Upstash KV経由）
+﻿// ポイント付与ユーティリティ（Upstash KV経由）
 function addPoints(pt, type, label) {
   const owner = location.pathname.includes('/kanka/') ? 'kanka' : 'hanano';
   fetch('/api/pet/' + owner + '/addpoints', {
@@ -22,3 +22,4 @@ function showPointToast(pt) {
   document.body.appendChild(toast);
   setTimeout(function() { toast.remove(); }, 2000);
 }
+
