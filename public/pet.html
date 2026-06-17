@@ -228,15 +228,27 @@ const itemDefs = [
   {id:'toy',   name:'おもちゃ', icon:'🎯', desc:'きげん+40', cost:40, effect:{happy:40}},
 ];
 
-function loadData(){
-  const d = localStorage.getItem(storageKey);
-  return d ? {...defaultData, ...JSON.parse(d)} : {...defaultData};
+async function loadData(){
+  try {
+    const res = await fetch('/api/pet/' + owner);
+    const d = await res.json();
+    return Object.keys(d).length ? {...defaultData, ...d} : {...defaultData};
+  } catch(e) {
+    return {...defaultData};
+  }
 }
-function saveData(d){
-  localStorage.setItem(storageKey, JSON.stringify(d));
+async function saveData(d){
+  try {
+    await fetch('/api/pet/' + owner, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(d)
+    });
+  } catch(e) {}
 }
 
-let data = loadData();
+let data = {...defaultData};
+loadData().then(d => { data = d; updateUI(); });
 
 // 時間経過でゲージ減少
 function applyTimeDecay(){
