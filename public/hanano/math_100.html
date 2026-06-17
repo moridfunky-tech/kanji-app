@@ -50,6 +50,7 @@ td input:focus{background:#fff8e0}
 .new-record{font-size:12pt;font-weight:700;color:#f39c12;display:none}
 .btn-retry{background:#2980b9;color:white;padding:12px 32px;border-radius:8px;border:none;font-size:12pt;font-weight:700;cursor:pointer;width:100%}
 </style>
+<script src="../pet_points.js"></script>
 </head>
 <body>
 <a class="back" href="math.html">← 戻る</a>
@@ -107,7 +108,8 @@ function setMode(m){
   document.getElementById('startScreen').style.display='flex';
   document.getElementById('gameScreen').style.display='none';
   document.getElementById('resultScreen').style.display='none';
-  if(timerInterval){clearInterval(timerInterval);timerInterval=null;}
+  if(timerInterval){clearInterval(timerInterval);timerInterval=null;
+  addPoints(20,'math','100ます計算完走');}
 }
 
 function updateBestTime(){
@@ -235,6 +237,7 @@ function startGame(){
 
 function finishGame(){
   clearInterval(timerInterval);timerInterval=null;
+  addPoints(20,'math','100ます計算完走');
   // 正解数カウント
   let correct=0;
   for(let ri=0;ri<10;ri++){

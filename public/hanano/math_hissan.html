@@ -76,6 +76,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%}
 .miss-ans{color:#27ae60}
 .btn-retry{background:#2980b9;color:white;padding:12px 32px;border-radius:8px;border:none;font-size:12pt;font-weight:700;cursor:pointer;width:100%}
 </style>
+<script src="../pet_points.js"></script>
 </head>
 <body>
 <a class="back" href="math.html">← 戻る</a>
@@ -243,6 +244,7 @@ function checkAnswer(){
     ai.className='answer-input correct';
     r.className='result ok';r.textContent='⭕ 正解！';
     score++;
+    addPoints(8,'math','筆算練習正解');
   } else {
     ai.className='answer-input wrong';
     r.className='result ng';r.textContent='❌ 正解は '+q.ans;

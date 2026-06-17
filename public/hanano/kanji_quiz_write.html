@@ -36,6 +36,7 @@ h1{font-size:16pt;font-weight:700;color:#2980b9;margin-bottom:16px}
 .miss-kanji{font-size:24pt;font-weight:700;color:#27ae60;font-family:serif}
 .btn-retry{background:#2980b9;color:white;padding:12px 32px;border-radius:8px;border:none;font-size:12pt;font-weight:700;cursor:pointer;width:100%}
 </style>
+<script src="../pet_points.js"></script>
 </head>
 <body>
 <a class="back" href="kanji.html">← 戻る</a>
@@ -121,6 +122,7 @@ function answer(selected,correct,btn){
     btn.classList.add('correct');
     r.className='result ok';r.textContent='⭕ 正解！';
     score++;
+    addPoints(5,'kanji','漢字書きクイズ正解');
   } else {
     btn.classList.add('wrong');
     r.className='result ng';r.textContent='❌ 正解は「'+correct+'」';

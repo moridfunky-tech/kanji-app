@@ -33,6 +33,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:#f0f7fc;color:#1a1a2e}
 .back-btn{background:white;color:#2980b9;border:2px solid #2980b9;padding:12px 24px;border-radius:6px;font-size:12pt;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
 @media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
 </style>
+<script src="../pet_points.js"></script>
 </head>
 <body>
 <div class="hdr">
@@ -131,6 +132,7 @@ async function gradeAll(){
       allResults.push({question:q.q+'【'+q.b+'】'+q.a,answer:q.ans,correct:d.correct});
       if(d.correct){
         r.className='res ok';r.textContent='⭕ 正解！';
+        addPoints(10,'kanji','漢字テスト正解');
         document.getElementById('c'+i).className='card ok';
       }else{
         r.className='res ng';r.textContent='❌ 正解は「'+q.ans+'」';

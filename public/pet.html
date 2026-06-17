@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>そだてっこ</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans JP','IPAGothic',sans-serif;background:#f7f4ef;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:12px}
+.back{align-self:flex-start;font-size:10pt;color:#555;text-decoration:none;background:white;padding:6px 14px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:12px}
+
+/* タブ */
+.tabs{display:flex;gap:4px;background:white;border-radius:12px;padding:4px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.tab{padding:8px 20px;border-radius:8px;border:none;font-size:10pt;font-weight:700;cursor:pointer;background:transparent;color:#aaa;transition:all 0.2s}
+.tab.active{background:#c0392b;color:white}
+
+.screen{display:none;width:100%;max-width:360px}
+.screen.active{display:block}
+
+/* 育成画面 */
+.pet-card{background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);padding:20px;margin-bottom:12px;text-align:center}
+.owner-name{font-size:9pt;color:#aaa;margin-bottom:8px}
+.pet-stage{font-size:80px;line-height:1;margin-bottom:8px;transition:all 0.5s}
+.pet-name{font-size:14pt;font-weight:700;color:#1a1a2e}
+.pet-mood{font-size:10pt;color:#aaa;margin-top:4px;min-height:20px}
+.gauge-wrap{margin:12px 0}
+.gauge-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.gauge-label{font-size:9pt;color:#555;min-width:52px}
+.gauge-bar{flex:1;background:#f0e8e8;border-radius:4px;height:8px;overflow:hidden}
+.gauge-fill{height:100%;border-radius:4px;transition:width 0.5s}
+.gauge-val{font-size:9pt;color:#aaa;min-width:28px;text-align:right}
+.pt-row{display:flex;justify-content:center;align-items:center;gap:6px;margin:10px 0}
+.pt-badge{background:#fff0f0;color:#c0392b;font-size:14pt;font-weight:700;padding:4px 16px;border-radius:20px}
+.pt-label{font-size:9pt;color:#aaa}
+.action-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.action-btn{padding:10px;border-radius:8px;border:1.5px solid #e0d0cc;background:white;font-size:10pt;font-weight:700;cursor:pointer;color:#1a1a2e;transition:all 0.15s}
+.action-btn:hover{background:#fff0f0;border-color:#c0392b}
+.action-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+/* メッセージ */
+.msg-box{background:#fffaf8;border:1.5px solid #e0d0cc;border-radius:8px;padding:8px 12px;font-size:10pt;color:#555;margin-top:8px;min-height:32px;text-align:center}
+
+/* ショップ */
+.shop-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.shop-title{font-size:14pt;font-weight:700;color:#1a1a2e}
+.shop-pt{font-size:12pt;font-weight:700;color:#c0392b}
+.item-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.item{display:flex;align-items:center;gap:10px;background:white;border-radius:12px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.item-icon{font-size:28px;min-width:36px;text-align:center}
+.item-info{flex:1}
+.item-name{font-size:11pt;font-weight:700;color:#1a1a2e}
+.item-desc{font-size:9pt;color:#aaa}
+.item-count{font-size:9pt;color:#888;margin-top:2px}
+.buy-btn{background:#c0392b;color:white;border:none;padding:6px 12px;border-radius:8px;font-size:10pt;font-weight:700;cursor:pointer;min-width:52px}
+.buy-btn:disabled{opacity:0.4;cursor:not-allowed}
+.use-btn{background:#27ae60;color:white;border:none;padding:6px 12px;border-radius:8px;font-size:10pt;font-weight:700;cursor:pointer;min-width:52px}
+.use-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+/* 進化チャート */
+.evo-title{font-size:12pt;font-weight:700;color:#1a1a2e;margin-bottom:10px}
+.evo-route{background:white;border-radius:12px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:8px}
+.evo-route-name{font-size:10pt;font-weight:700;color:#c0392b;margin-bottom:6px}
+.evo-stages{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.evo-stage{text-align:center}
+.evo-emoji{font-size:24px}
+.evo-sname{font-size:8pt;color:#aaa;margin-top:2px}
+.evo-arrow{color:#aaa;font-size:12pt}
+.evo-cond{font-size:9pt;color:#aaa;margin-top:6px;border-top:1px solid #f0e8e8;padding-top:6px}
+
+/* ポイント履歴 */
+.history-title{font-size:12pt;font-weight:700;color:#1a1a2e;margin-bottom:10px}
+.history-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0e8e8;font-size:10pt}
+.history-label{color:#555}
+.history-pt{color:#c0392b;font-weight:700}
+</style>
+</head>
+<body>
+<a class="back" id="backBtn" href="#">← 戻る</a>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('pet')">🥚 そだてっこ</button>
+  <button class="tab" onclick="showTab('shop')">🛒 ショップ</button>
+  <button class="tab" onclick="showTab('evo')">✨ しんか</button>
+</div>
+
+<!-- 育成画面 -->
+<div class="screen active" id="petScreen">
+  <div class="pet-card">
+    <div class="owner-name" id="ownerName">カンカンのそだてっこ</div>
+    <div class="pet-stage" id="petEmoji">🥚</div>
+    <div class="pet-name" id="petName">タマゴ</div>
+    <div class="pet-mood" id="petMood">もうすぐうまれそう...</div>
+    <div class="gauge-wrap">
+      <div class="gauge-row">
+        <div class="gauge-label">🍎 おなか</div>
+        <div class="gauge-bar"><div class="gauge-fill" id="hungerBar" style="background:#c0392b;width:80%"></div></div>
+        <div class="gauge-val" id="hungerVal">80</div>
+      </div>
+      <div class="gauge-row">
+        <div class="gauge-label">😊 きげん</div>
+        <div class="gauge-bar"><div class="gauge-fill" id="happyBar" style="background:#f39c12;width:70%"></div></div>
+        <div class="gauge-val" id="happyVal">70</div>
+      </div>
+      <div class="gauge-row">
+        <div class="gauge-label">⚡ けいけん</div>
+        <div class="gauge-bar"><div class="gauge-fill" id="expBar" style="background:#2980b9;width:20%"></div></div>
+        <div class="gauge-val" id="expVal">20</div>
+      </div>
+    </div>
+    <div class="pt-row">
+      <div class="pt-label">もちポイント</div>
+      <div class="pt-badge">⭐ <span id="ptDisp">0</span>pt</div>
+    </div>
+    <div class="action-btns">
+      <button class="action-btn" onclick="feedPet()">🍎 えさをあげる</button>
+      <button class="action-btn" onclick="playPet()">🎮 あそぶ</button>
+    </div>
+    <div class="msg-box" id="msgBox">勉強してポイントをためよう！</div>
+  </div>
+</div>
+
+<!-- ショップ画面 -->
+<div class="screen" id="shopScreen">
+  <div class="shop-header">
+    <div class="shop-title">🛒 ショップ</div>
+    <div class="shop-pt">⭐ <span id="shopPt">0</span>pt</div>
+  </div>
+  <div class="item-list" id="itemList"></div>
+</div>
+
+<!-- 進化・履歴画面 -->
+<div class="screen" id="evoScreen">
+  <div class="evo-title">✨ しんかチャート</div>
+  <div class="evo-route">
+    <div class="evo-route-name">📚 ぶんごう系（漢字多め）</div>
+    <div class="evo-stages">
+      <div class="evo-stage"><div class="evo-emoji">🥚</div><div class="evo-sname">タマゴ</div></div>
+      <div class="evo-arrow">→</div>
+      <div class="evo-stage"><div class="evo-emoji">🐣</div><div class="evo-sname">ヒナ</div></div>
+      <div class="evo-arrow">→</div>
+      <div class="evo-stage"><div class="evo-emoji">📖</div><div class="evo-sname">よみびと</div></div>
+      <div class="evo-arrow">→</div>
+      <div class="evo-stage"><div class="evo-emoji">🏯</div><div class="evo-sname">ぶんごう</div></div>
+    </div>
+    <div class="evo-cond">条件：漢字ポイントが全体の40%以上</div>
+  </div>
+  <div class="evo-route">
+    <div class="evo-route-name">🔬 はかせ系（算数多め）</div>
+    <div class="evo-stages">
+      <div class="evo-stage"><div class="evo-emoji">🥚</div><div class="evo-sname">タマゴ</div></div>
+      <div class="evo-arrow">→</div>
+      <div class="evo-stage"><div class="evo-emoji">🐣</div><div class="evo-sname">ヒナ</div></div>
+      <div class="evo-arrow">→</div>
+      <div class="evo-stage"><div class="evo-emoji">🔭</div><div class="evo-sname">けんきゅうしゃ</div></div>
+      <div class="evo-arrow">→</div>
+      <div class="evo-stage"><div class="evo-emoji">🧙</div><div class="evo-sname">はかせ</div></div>
+    </div>
+    <div class="evo-cond">条件：算数ポイントが全体の40%以上</div>
+  </div>
+  <div class="evo-route">
+    <div class="evo-route-name">🌍 たびびと系（英語多め）</div>
+    <div class="evo-stages">
+      <div class="evo-stage"><div class="evo-emoji">🥚</div><div class="evo-sname">タマゴ</div></div>
+      <div class="evo-arrow">→</div>
+      <div class="evo-stage"><div class="evo-emoji">🐣</div><div class="evo-sname">ヒナ</div></div>
+      <div class="evo-arrow">→</div>
+      <div class="evo-stage"><div class="evo-emoji">✈️</div><div class="evo-sname">たびびと</div></div>
+      <div class="evo-arrow">→</div>
+      <div class="evo-stage"><div class="evo-emoji">👑</div><div class="evo-sname">せかいおう</div></div>
+    </div>
+    <div class="evo-cond">条件：英語ポイントが全体の40%以上</div>
+  </div>
+  <div class="evo-route">
+    <div class="evo-route-name">⚔️ ゆうしゃ系（バランス）</div>
+    <div class="evo-stages">
+      <div class="evo-stage"><div class="evo-emoji">🥚</div><div class="evo-sname">タマゴ</div></div>
+      <div class="evo-arrow">→</div>
+      <div class="evo-stage"><div class="evo-emoji">🐣</div><div class="evo-sname">ヒナ</div></div>
+      <div class="evo-arrow">→</div>
+      <div class="evo-stage"><div class="evo-emoji">🦸</div><div class="evo-sname">ゆうしゃ</div></div>
+      <div class="evo-arrow">→</div>
+      <div class="evo-stage"><div class="evo-emoji">🐉</div><div class="evo-sname">りゅうおう</div></div>
+    </div>
+    <div class="evo-cond">条件：どれか1科目が40%未満でバランスよく学習</div>
+  </div>
+
+  <div class="history-title" style="margin-top:16px">📊 ポイント履歴</div>
+  <div id="historyList"></div>
+</div>
+
+<script>
+// URLパラメータからownerを取得
+const params = new URLSearchParams(location.search);
+const owner = params.get('owner') || 'kanka';
+const storageKey = 'pet_' + owner;
+
+document.getElementById('backBtn').href = owner === 'kanka' ? 'kanka/index.html' : 'hanano/index.html';
+document.getElementById('ownerName').textContent = owner === 'kanka' ? 'カンカンのそだてっこ' : '羽梛のそだてっこ';
+
+// データ構造
+const defaultData = {
+  pts: 0,
+  totalPts: 0,
+  hunger: 80,
+  happy: 70,
+  exp: 0,
+  stage: 0, // 0:たまご 1:ひな 2:中間 3:最終
+  route: '', // bungo/hakase/tabibito/yuusha
+  ptsByType: {kanji:0, math:0, english:0, romaji:0},
+  items: {apple:0, cake:0, magic:0, toy:0},
+  history: [],
+  lastUpdate: Date.now()
+};
+
+// ステージ定義
+const stages = {
+  bungo:   [{e:'🥚',n:'タマゴ'},{e:'🐣',n:'ヒナ'},{e:'📖',n:'よみびと'},{e:'🏯',n:'ぶんごう'}],
+  hakase:  [{e:'🥚',n:'タマゴ'},{e:'🐣',n:'ヒナ'},{e:'🔭',n:'けんきゅうしゃ'},{e:'🧙',n:'はかせ'}],
+  tabibito:[{e:'🥚',n:'タマゴ'},{e:'🐣',n:'ヒナ'},{e:'✈️',n:'たびびと'},{e:'👑',n:'せかいおう'}],
+  yuusha:  [{e:'🥚',n:'タマゴ'},{e:'🐣',n:'ヒナ'},{e:'🦸',n:'ゆうしゃ'},{e:'🐉',n:'りゅうおう'}],
+};
+
+// アイテム定義
+const itemDefs = [
+  {id:'apple', name:'りんご', icon:'🍎', desc:'おなか+20', cost:10, effect:{hunger:20}},
+  {id:'cake',  name:'ケーキ', icon:'🍰', desc:'おなか+30 きげん+20', cost:30, effect:{hunger:30,happy:20}},
+  {id:'magic', name:'まほうのくすり', icon:'✨', desc:'けいけん+30', cost:50, effect:{exp:30}},
+  {id:'toy',   name:'おもちゃ', icon:'🎯', desc:'きげん+40', cost:40, effect:{happy:40}},
+];
+
+function loadData(){
+  const d = localStorage.getItem(storageKey);
+  return d ? {...defaultData, ...JSON.parse(d)} : {...defaultData};
+}
+function saveData(d){
+  localStorage.setItem(storageKey, JSON.stringify(d));
+}
+
+let data = loadData();
+
+// 時間経過でゲージ減少
+function applyTimeDecay(){
+  const now = Date.now();
+  const elapsed = Math.floor((now - data.lastUpdate) / 1000 / 60); // 分
+  if(elapsed > 0){
+    data.hunger = Math.max(0, data.hunger - elapsed * 0.5);
+    data.happy = Math.max(0, data.happy - elapsed * 0.3);
+    data.lastUpdate = now;
+    saveData(data);
+  }
+}
+
+// 進化チェック
+function checkEvolution(){
+  if(data.exp < 50) return;
+  const t = data.ptsByType;
+  const total = t.kanji + t.math + t.english + t.romaji || 1;
+  const ratios = {kanji:t.kanji/total, math:t.math/total, english:t.english/total};
+
+  if(data.stage === 0 && data.exp >= 30){
+    data.stage = 1;
+    data.route = '';
+    showMsg('🎉 タマゴがかえった！ヒナになったよ！');
+  } else if(data.stage === 1 && data.exp >= 100){
+    // ルート決定
+    if(ratios.kanji >= 0.4) data.route = 'bungo';
+    else if(ratios.math >= 0.4) data.route = 'hakase';
+    else if(ratios.english >= 0.4) data.route = 'tabibito';
+    else data.route = 'yuusha';
+    data.stage = 2;
+    const s = stages[data.route][2];
+    showMsg(`🌟 しんか！${s.n}になったよ！`);
+  } else if(data.stage === 2 && data.exp >= 300){
+    data.stage = 3;
+    const s = stages[data.route][3];
+    showMsg(`👑 さいこうしんか！${s.n}になったよ！`);
+  }
+}
+
+function getStageInfo(){
+  if(data.stage === 0) return {e:'🥚', n:'タマゴ'};
+  const route = data.route || 'yuusha';
+  return stages[route][data.stage] || stages.yuusha[data.stage];
+}
+
+function getMood(){
+  const avg = (data.hunger + data.happy) / 2;
+  if(avg >= 80) return 'とっても元気！😄';
+  if(avg >= 60) return '普通だよ😊';
+  if(avg >= 40) return 'ちょっとお腹すいた...😐';
+  if(avg >= 20) return 'お腹すいた！機嫌わるい😠';
+  return 'ひどい！もっと世話して！😢';
+}
+
+function updateUI(){
+  applyTimeDecay();
+  checkEvolution();
+  const s = getStageInfo();
+  document.getElementById('petEmoji').textContent = s.e;
+  document.getElementById('petName').textContent = s.n;
+  document.getElementById('petMood').textContent = getMood();
+  document.getElementById('hungerBar').style.width = data.hunger + '%';
+  document.getElementById('hungerVal').textContent = Math.floor(data.hunger);
+  document.getElementById('happyBar').style.width = data.happy + '%';
+  document.getElementById('happyVal').textContent = Math.floor(data.happy);
+  const expPct = Math.min(100, (data.exp % 100));
+  document.getElementById('expBar').style.width = expPct + '%';
+  document.getElementById('expVal').textContent = Math.floor(data.exp);
+  document.getElementById('ptDisp').textContent = data.pts;
+  document.getElementById('shopPt').textContent = data.pts;
+  renderItems();
+  renderHistory();
+}
+
+function showMsg(msg){
+  document.getElementById('msgBox').textContent = msg;
+}
+
+function feedPet(){
+  if(data.items.apple > 0){
+    data.items.apple--;
+    data.hunger = Math.min(100, data.hunger + 20);
+    showMsg('🍎 りんごをあげた！おなかいっぱい！');
+  } else if(data.items.cake > 0){
+    data.items.cake--;
+    data.hunger = Math.min(100, data.hunger + 30);
+    data.happy = Math.min(100, data.happy + 20);
+    showMsg('🍰 ケーキをあげた！おいしい！');
+  } else {
+    showMsg('えさがないよ！ショップで買ってね🛒');
+  }
+  saveData(data);
+  updateUI();
+}
+
+function playPet(){
+  if(data.items.toy > 0){
+    data.items.toy--;
+    data.happy = Math.min(100, data.happy + 40);
+    showMsg('🎯 おもちゃで遊んだ！楽しい！');
+  } else {
+    data.happy = Math.min(100, data.happy + 10);
+    showMsg('🎮 いっしょに遊んだ！きげんがよくなった！');
+  }
+  saveData(data);
+  updateUI();
+}
+
+function renderItems(){
+  const el = document.getElementById('itemList');
+  el.innerHTML = '';
+  itemDefs.forEach(item => {
+    const count = data.items[item.id] || 0;
+    const canBuy = data.pts >= item.cost;
+    const div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML = `
+      <div class="item-icon">${item.icon}</div>
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-desc">${item.desc}</div>
+        <div class="item-count">所持: ${count}個</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button class="buy-btn" ${!canBuy?'disabled':''} onclick="buyItem('${item.id}',${item.cost})">${item.cost}pt</button>
+        ${count>0?`<button class="use-btn" onclick="useItem('${item.id}')">つかう</button>`:''}
+      </div>
+    `;
+    el.appendChild(div);
+  });
+}
+
+function buyItem(id, cost){
+  if(data.pts < cost) return;
+  data.pts -= cost;
+  data.items[id] = (data.items[id] || 0) + 1;
+  saveData(data);
+  updateUI();
+  showMsg(`${itemDefs.find(i=>i.id===id).icon} かった！`);
+}
+
+function useItem(id){
+  const item = itemDefs.find(i=>i.id===id);
+  if(!item || !data.items[id]) return;
+  data.items[id]--;
+  if(item.effect.hunger) data.hunger = Math.min(100, data.hunger + item.effect.hunger);
+  if(item.effect.happy) data.happy = Math.min(100, data.happy + item.effect.happy);
+  if(item.effect.exp){ data.exp += item.effect.exp; checkEvolution(); }
+  saveData(data);
+  updateUI();
+  showMsg(`${item.icon} ${item.name}をつかった！`);
+}
+
+function renderHistory(){
+  const el = document.getElementById('historyList');
+  if(!data.history || data.history.length === 0){
+    el.innerHTML = '<div style="font-size:10pt;color:#aaa;text-align:center;padding:8px">まだ記録がないよ</div>';
+    return;
+  }
+  el.innerHTML = data.history.slice(-10).reverse().map(h =>
+    `<div class="history-item"><span class="history-label">${h.label}</span><span class="history-pt">+${h.pt}pt</span></div>`
+  ).join('');
+}
+
+function showTab(tab){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(tab+'Screen').classList.add('active');
+  event.target.classList.add('active');
+  updateUI();
+}
+
+// 外部からポイントを受け取る関数（グローバル）
+window.addPetPoints = function(pt, type, label){
+  data = loadData();
+  data.pts += pt;
+  data.totalPts += pt;
+  data.exp += Math.floor(pt * 0.3);
+  if(data.ptsByType[type] !== undefined) data.ptsByType[type] += pt;
+  data.history = data.history || [];
+  data.history.push({label, pt, time: Date.now()});
+  if(data.history.length > 50) data.history = data.history.slice(-50);
+  checkEvolution();
+  saveData(data);
+};
+
+// 定期更新
+setInterval(updateUI, 60000);
+updateUI();
+</script>
+</body>
+</html>

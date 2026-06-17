@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>漢字テスト 3年生 第1週</title>
+<script src="../pet_points.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Noto Sans JP',sans-serif;background:#f5f2ee;color:#1a1a2e}
@@ -20,7 +21,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:#f5f2ee;color:#1a1a2e}
 .qtext{font-size:11pt;text-align:center;line-height:1.8}
 .hl{color:#c0392b;font-weight:700}
 .cwrap{border:1px solid #c8c0b8;border-radius:4px;background:white;cursor:crosshair}
-.cwrap canvas{display:block;width:120px;height:120px}
+.cwrap canvas{display:block;width:240px;height:240px}
 .clr{background:none;border:none;font-size:10px;color:#aaa;cursor:pointer;padding:2px 0;width:100%;text-align:center}
 .clr:hover{color:#c0392b}
 .res{font-size:11pt;font-weight:700;text-align:center;min-height:24px}
@@ -30,6 +31,8 @@ body{font-family:'Noto Sans JP',sans-serif;background:#f5f2ee;color:#1a1a2e}
 .btns{padding:12px 8px;text-align:center;display:flex;gap:12px;justify-content:center}
 .gbtn{background:#c0392b;color:white;border:none;padding:12px 32px;border-radius:6px;font-size:14pt;font-weight:700;cursor:pointer}
 .gbtn:disabled{opacity:0.5;cursor:not-allowed}
+.back-btn{background:white;color:#c0392b;border:2px solid #c0392b;padding:12px 24px;border-radius:6px;font-size:12pt;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block}
+@media(max-width:600px){.grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -40,6 +43,7 @@ body{font-family:'Noto Sans JP',sans-serif;background:#f5f2ee;color:#1a1a2e}
 <div class="main">
   <div class="grid" id="grid"></div>
   <div class="btns">
+    <a class="back-btn" href="index.html">← 戻る</a>
     <button class="gbtn" id="gbtn" onclick="gradeAll()">採点する</button>
   </div>
   <div id="result-msg" style="text-align:center;margin-top:12px;font-size:14pt;font-weight:700;color:#c0392b"></div>
@@ -129,6 +133,7 @@ async function gradeAll(){
       if(d.correct){
         r.className='res ok';r.textContent='⭕ 正解！';
         document.getElementById('c'+i).className='card ok';
+        addPoints(10,'kanji','漢字テスト正解');
       }else{
         r.className='res ng';r.textContent='❌ 正解は「'+q.ans+'」';
         document.getElementById('c'+i).className='card ng';
@@ -141,7 +146,6 @@ async function gradeAll(){
   const score=allResults.filter(r=>r.correct).length;
   document.getElementById('sv').textContent=score;
   btn.textContent='もう一度採点する';btn.disabled=false;
-  // 結果を送信
   const today=new Date().toLocaleDateString('ja-JP');
   try{
     const res=await fetch('/api/submit',{
@@ -152,7 +156,6 @@ async function gradeAll(){
     const d=await res.json();
     const msg=score>=15?'満点！すばらしい！':score>=10?'よくできました！':'もう少し練習しよう！';
     document.getElementById('result-msg').textContent=`${score}/15点　${msg}　📧結果をメールで送りました！`;
-    if(d.weakKanji) document.getElementById('result-msg').textContent+=`　苦手: ${d.weakKanji}`;
   }catch(e){
     document.getElementById('result-msg').textContent=`${score}/15点　メール送信エラー`;
   }
