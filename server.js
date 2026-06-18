@@ -14,20 +14,34 @@ const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 
 async function kvGet(key) {
   if (!KV_URL || !KV_TOKEN) return null;
-  const res = await fetch(KV_URL + '/get/' + encodeURIComponent(key), {
-    headers: { Authorization: 'Bearer ' + KV_TOKEN }
-  });
-  const data = await res.json();
-  return data.result ? JSON.parse(data.result) : null;
+  try {
+    const res = await fetch(KV_URL + '/get/' + encodeURIComponent(key), {
+      headers: { Authorization: 'Bearer ' + KV_TOKEN }
+    });
+    const data = await res.json();
+    if (!data.result) return null;
+    // resultが文字列ならparseし、オブジェクトならそのまま返す
+    if (typeof data.result === 'string') {
+      try { return JSON.parse(data.result); } catch(e) { return null; }
+    }
+    return data.result;
+  } catch(e) {
+    console.error('kvGet error:', e.message);
+    return null;
+  }
 }
 
 async function kvSet(key, value) {
   if (!KV_URL || !KV_TOKEN) return;
-  await fetch(KV_URL + '/set/' + encodeURIComponent(key), {
-    method: 'POST',
-    headers: { Authorization: 'Bearer ' + KV_TOKEN, 'Content-Type': 'application/json' },
-    body: JSON.stringify(JSON.stringify(value))
-  });
+  try {
+    await fetch(KV_URL + '/set/' + encodeURIComponent(key), {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + KV_TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify(JSON.stringify(value))
+    });
+  } catch(e) {
+    console.error('kvSet error:', e.message);
+  }
 }
 
 app.post('/api/grade', async (req, res) => {
@@ -62,9 +76,9 @@ app.post('/api/submit', async (req, res) => {
     await transporter.sendMail({
       from: process.env.GMAIL_USER, to: process.env.GMAIL_USER,
       subject: '\u3010\u6f22\u5b57\u30c6\u30b9\u30c8\u3011'+date+' '+week+' \u7d50\u679c\uff1a'+score+'/15\u70b9',
-      text: '\u30ab\u30f3\u30ab\u30f3\u306e\u6f22\u5b57\u30c6\u30b9\u30c8\u7d50\u679c\uff01\n\n\u65e5\u4ed8: '+date+'\n\u9031: '+week+'\n\u5f97\u70b9: '+score+'/15\u70b9\n\n'+resultRows+'\n\n\u82e6\u624b\u306a\u6f22\u5b57: '+(weakKanji||'\u306a\u3057')
+      text: '\u65e5\u4ed8: '+date+'\n\u9031: '+week+'\n\u5f97\u70b9: '+score+'/15\u70b9\n\n'+resultRows+'\n\n\u82e6\u624b\u306a\u6f22\u5b57: '+(weakKanji||'\u306a\u3057')
     });
-    res.json({ success: true, weakKanji });
+    res.json({ success: true, weakKanji: weakKanji });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -81,11 +95,11 @@ app.get('/api/pet/:owner', async (req, res) => {
 
 app.post('/api/pet/:owner/addpoints', async (req, res) => {
   try {
-    const pt = req.body.pt;
-    const type = req.body.type;
-    const label = req.body.label;
+    const pt = Number(req.body.pt) || 0;
+    const type = req.body.type || 'kanji';
+    const label = req.body.label || '';
     var data = await kvGet('pet_' + req.params.owner);
-    if (!data) data = {
+    if (!data || typeof data !== 'object') data = {
       pts:0, totalPts:0, hunger:80, happy:70, exp:0, stage:0, route:'',
       ptsByType:{kanji:0,math:0,english:0,romaji:0},
       items:{apple:0,cake:0,magic:0,toy:0},
@@ -103,6 +117,7 @@ app.post('/api/pet/:owner/addpoints', async (req, res) => {
     await kvSet('pet_' + req.params.owner, data);
     res.json({ success: true, data: data });
   } catch (e) {
+    console.error('addpoints error:', e.message, e.stack);
     res.status(500).json({ error: e.message });
   }
 });
@@ -127,7 +142,7 @@ app.get('/api/mistakes/:owner', async (req, res) => {
 
 app.post('/api/mistakes/:owner', async (req, res) => {
   try {
-    const mistakes = req.body.mistakes;
+    const mistakes = req.body.mistakes || [];
     const existing = await kvGet('mistakes_' + req.params.owner) || [];
     const merged = existing.slice();
     mistakes.forEach(function(m) {
