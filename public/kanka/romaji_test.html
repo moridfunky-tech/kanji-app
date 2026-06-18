@@ -251,6 +251,8 @@ function showResult(){
     div.innerHTML = `<div class="result-kana">${r.kana}</div><div class="result-romaji">${r.ans}</div>`;
     list.appendChild(div);
   });
+
+  if(score > 0) addPoints(score * 5, 'romaji', 'ローマ字テスト ' + score + '問正解');
 }
 
 function retry(){

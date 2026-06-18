@@ -348,6 +348,8 @@ function showResult(type){
     ml.innerHTML='<div class="miss-title">まちがえた単語</div>'+
       misses.map(m=>`<div class="miss-item"><div class="miss-en">${m.en}</div><div class="miss-ja">${m.ja}</div></div>`).join('');
   }
+
+  if(score > 0) addPoints(score * 5, 'english', '英語クイズ ' + score + '問正解');
 }
 
 function retry(){
