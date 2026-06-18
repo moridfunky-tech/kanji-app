@@ -86,7 +86,9 @@ app.post('/api/submit', async (req, res) => {
 
 app.get('/api/pet/:owner', async (req, res) => {
   try {
-    const data = await kvGet('pet_' + req.params.owner);
+    var data = await kvGet('pet_' + req.params.owner);
+    // kvGetが文字列を返す場合の二重パース対応
+    if (typeof data === 'string') { try { data = JSON.parse(data); } catch(e2) {} }
     res.json(data || null);
   } catch (e) {
     res.status(500).json({ error: e.message });
