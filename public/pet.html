@@ -231,8 +231,10 @@ const itemDefs = [
 async function loadData(){
   try {
     const res = await fetch('/api/pet/' + owner);
-    const d = await res.json();
-    return Object.keys(d).length ? {...defaultData, ...d} : {...defaultData};
+    let d = await res.json();
+    if (typeof d === 'string') { try { d = JSON.parse(d); } catch(e2) {} }
+    if (!d || typeof d !== 'object') return {...defaultData};
+    return {...defaultData, ...d};
   } catch(e) {
     return {...defaultData};
   }
