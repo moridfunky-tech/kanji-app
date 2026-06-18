@@ -20,11 +20,12 @@ async function kvGet(key) {
     });
     const data = await res.json();
     if (!data.result) return null;
-    // resultが文字列ならparseし、オブジェクトならそのまま返す
-    if (typeof data.result === 'string') {
-      try { return JSON.parse(data.result); } catch(e) { return null; }
+    // 多重エンコード対応：文字列の場合は繰り返しパース
+    var val = data.result;
+    while (typeof val === 'string') {
+      try { val = JSON.parse(val); } catch(e) { break; }
     }
-    return data.result;
+    return (val && typeof val === 'object') ? val : null;
   } catch(e) {
     console.error('kvGet error:', e.message);
     return null;
@@ -37,7 +38,7 @@ async function kvSet(key, value) {
     await fetch(KV_URL + '/set/' + encodeURIComponent(key), {
       method: 'POST',
       headers: { Authorization: 'Bearer ' + KV_TOKEN, 'Content-Type': 'application/json' },
-      body: JSON.stringify(JSON.stringify(value))
+      body: JSON.stringify(value)
     });
   } catch(e) {
     console.error('kvSet error:', e.message);
