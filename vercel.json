@@ -5,6 +5,10 @@
     { "src": "public/**", "use": "@vercel/static" }
   ],
   "routes": [
+    { "src": "/api/pet/([^/]+)/addpoints", "dest": "server.js", "methods": ["POST"] },
+    { "src": "/api/pet/([^/]+)", "dest": "server.js", "methods": ["GET", "POST"] },
+    { "src": "/api/mistakes/([^/]+)", "dest": "server.js", "methods": ["GET", "POST"] },
+    { "src": "/api/week/([^/]+)", "dest": "server.js", "methods": ["GET"] },
     { "src": "/api/(.*)", "dest": "server.js" },
     { "src": "/(.*)", "dest": "public/$1" }
   ]
