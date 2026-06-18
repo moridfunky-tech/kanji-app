@@ -214,6 +214,16 @@ function showResult(){
     ml.innerHTML='<div class="miss-title">まちがえた漢字</div>'+
       misses.map(m=>`<div class="miss-item"><div class="miss-kanji">${m.k}</div><div class="miss-ans">→ ${m.y}</div></div>`).join('');
   }
+
+  if(score > 0) addPoints(score * 5, 'kanji', '読みクイズ ' + score + '問正解');
+
+  if(misses.length > 0){
+    fetch('/api/mistakes/kanka', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ mistakes: misses.map(m=>({k:m.k, y:m.y, cnt:1})) })
+    }).catch(function(){});
+  }
 }
 
 function retry(){
