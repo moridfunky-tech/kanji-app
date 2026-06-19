@@ -104,14 +104,14 @@ app.post('/api/pet/:owner/addpoints', async (req, res) => {
     var data = await kvGet('pet_' + req.params.owner);
     if (!data || typeof data !== 'object') data = {
       pts:0, totalPts:0, hunger:80, happy:70, exp:0, stage:0, route:'',
-      ptsByType:{kanji:0,math:0,english:0,romaji:0},
+      ptsByType:{kanji:0,math:0,english:0,romaji:0,social:0},
       items:{apple:0,cake:0,magic:0,toy:0},
       history:[], lastUpdate: Date.now()
     };
     data.pts      = (data.pts      || 0) + pt;
     data.totalPts = (data.totalPts || 0) + pt;
     data.exp      = (data.exp      || 0) + Math.floor(pt * 0.3);
-    data.ptsByType = data.ptsByType || {kanji:0,math:0,english:0,romaji:0};
+    data.ptsByType = data.ptsByType || {kanji:0,math:0,english:0,romaji:0,social:0};
     if (data.ptsByType[type] !== undefined) data.ptsByType[type] += pt;
     data.history = data.history || [];
     data.history.push({ label: label, pt: pt, time: Date.now() });
@@ -248,6 +248,32 @@ app.post('/api/ask/:owner/clear', async (req, res) => {
     const owner = req.params.owner === 'hanano' ? 'hanano' : 'kanka';
     await kvSet('ask_' + owner, { history: [], updated: Date.now() });
     res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// たびクイズ 周回データ
+app.get('/api/journey/:owner', async (req, res) => {
+  try {
+    const owner = req.params.owner === 'hanano' ? 'hanano' : 'kanka';
+    const data = await kvGet('journey_' + owner);
+    res.json(data || { laps: 0, bestTime: null });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.post('/api/journey/:owner', async (req, res) => {
+  try {
+    const owner = req.params.owner === 'hanano' ? 'hanano' : 'kanka';
+    var data = await kvGet('journey_' + owner) || { laps: 0, bestTime: null };
+    data.laps = (data.laps || 0) + 1;
+    const t = Number(req.body.time);
+    if (t && (!data.bestTime || t < data.bestTime)) data.bestTime = t;
+    data.lastUpdate = Date.now();
+    await kvSet('journey_' + owner, data);
+    res.json({ success: true, data: data });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

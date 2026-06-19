@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>にっぽん たびクイズ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&display=swap');
+  :root { --sky:#7EC8E3; --cream:#FFF8E7; --ink:#3A3A3A; --gold:#F5A623; --green:#5BB85B; --theme:#E8553F; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Zen Maru Gothic',sans-serif; background:linear-gradient(180deg,var(--sky) 0%,var(--cream) 35%); color:var(--ink); min-height:100vh; display:flex; flex-direction:column; }
+  .header { padding:14px 16px; display:flex; align-items:center; gap:10px; }
+  .back-btn { background:rgba(255,255,255,0.85); color:var(--ink); text-decoration:none; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16pt; font-weight:700; }
+  .header-title { font-size:15pt; font-weight:700; color:white; text-shadow:0 2px 4px rgba(0,0,0,0.15); }
+  .journey-bar { margin:0 16px 12px; background:rgba(255,255,255,0.9); border-radius:14px; padding:12px 16px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+  .journey-icon { font-size:24px; }
+  .journey-info { flex:1; }
+  .journey-title { font-size:11pt; font-weight:700; }
+  .journey-progress { height:8px; background:#EEE; border-radius:4px; margin-top:5px; overflow:hidden; }
+  .journey-fill { height:100%; background:linear-gradient(90deg,var(--green),#8FD98F); border-radius:4px; transition:width 0.4s; }
+  .journey-count { font-size:9pt; color:#888; margin-top:3px; }
+  .lap-badge { background:var(--gold); color:white; font-size:10pt; font-weight:700; padding:4px 12px; border-radius:14px; }
+  .map-area { flex:1; padding:8px 16px 12px; display:flex; align-items:center; justify-content:center; }
+  .train-track { width:100%; max-width:420px; text-align:center; }
+  .now-pref { background:white; border-radius:16px; padding:20px; box-shadow:0 4px 16px rgba(0,0,0,0.1); margin-bottom:10px; }
+  .now-emoji { font-size:56px; }
+  .now-label { font-size:9pt; color:#999; margin-top:4px; }
+  .train-row { display:flex; align-items:center; justify-content:center; gap:6px; font-size:20px; margin-top:8px; }
+  .quiz-panel { background:white; border-radius:20px 20px 0 0; padding:18px 16px 24px; box-shadow:0 -4px 16px rgba(0,0,0,0.1); }
+  .quiz-q { text-align:center; margin-bottom:14px; }
+  .quiz-label { font-size:9pt; color:#999; }
+  .quiz-hint { font-size:14pt; font-weight:700; color:var(--gold); margin-top:6px; line-height:1.5; }
+  .quiz-capital { font-size:10pt; color:#888; margin-top:4px; }
+  .choices { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .choice-btn { background:var(--cream); border:2px solid var(--gold); color:var(--ink); border-radius:14px; padding:14px; font-size:13pt; font-weight:700; font-family:inherit; cursor:pointer; }
+  .choice-btn:active { background:#FFE8C0; }
+  .choice-btn.correct { background:var(--green); color:white; border-color:var(--green); }
+  .choice-btn.wrong { background:#F5B7B1; border-color:#E74C3C; }
+  /* ゴール演出 */
+  .goal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; }
+  .goal-overlay.show { display:flex; }
+  .goal-card { background:white; border-radius:20px; padding:32px 28px; text-align:center; max-width:320px; width:85%; }
+  .goal-emoji { font-size:64px; }
+  .goal-title { font-size:18pt; font-weight:700; margin:10px 0; }
+  .goal-badge-row { font-size:36px; margin:12px 0; }
+  .goal-stat { font-size:11pt; color:#666; margin:6px 0; }
+  .goal-btn { background:var(--theme); color:white; border:none; border-radius:24px; padding:14px 36px; font-size:13pt; font-weight:700; font-family:inherit; cursor:pointer; margin-top:14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">←</a>
+  <div class="header-title">🗾 にっぽん たびクイズ</div>
+</div>
+
+<div class="journey-bar">
+  <div class="journey-icon">🚂</div>
+  <div class="journey-info">
+    <div class="journey-title" id="jTitle">日本一周のたびに しゅっぱつ！</div>
+    <div class="journey-progress"><div class="journey-fill" id="jFill" style="width:0%"></div></div>
+    <div class="journey-count" id="jCount">0 / 47 けん</div>
+  </div>
+  <div class="lap-badge" id="lapBadge">🏁 1しゅうめ</div>
+</div>
+
+<div class="map-area">
+  <div class="train-track">
+    <div class="now-pref">
+      <div class="now-emoji" id="nowEmoji">🚉</div>
+      <div class="now-label" id="nowLabel">つぎは どこの けん？</div>
+    </div>
+    <div class="train-row" id="trainRow">🚂💨</div>
+  </div>
+</div>
+
+<div class="quiz-panel">
+  <div class="quiz-q">
+    <div class="quiz-label">ヒントを みて こたえてね</div>
+    <div class="quiz-hint" id="hint">ヒント</div>
+    <div class="quiz-capital" id="capital"></div>
+  </div>
+  <div class="choices" id="choices"></div>
+</div>
+
+<div class="goal-overlay" id="goalOverlay">
+  <div class="goal-card">
+    <div class="goal-emoji">🎉</div>
+    <div class="goal-title" id="goalTitle">日本一周 たっせい！</div>
+    <div class="goal-badge-row" id="goalBadge">🥉</div>
+    <div class="goal-stat" id="goalLaps">これで 1しゅう クリア！</div>
+    <div class="goal-stat" id="goalTime"></div>
+    <div class="goal-stat" id="goalPt"></div>
+    <button class="goal-btn" onclick="nextLap()">つぎの しゅうへ →</button>
+  </div>
+</div>
+
+<script src="../prefectures.js"></script>
+<script src="../pet_points.js"></script>
+<script>
+const OWNER = 'kanka';
+const IS_KANKA = OWNER === 'kanka';
+
+// カンカンは major のみ、羽梛は全県
+let pool = IS_KANKA ? PREFECTURES.filter(p=>p.major) : PREFECTURES.slice();
+const TOTAL = pool.length;
+
+let order = [];
+let idx = 0;
+let correctCount = 0;
+let laps = 0;
+let startTime = 0;
+let answering = false;
+
+function shuffle(arr){ return [...arr].sort(()=>Math.random()-0.5); }
+
+async function loadJourney(){
+  try {
+    const res = await fetch('/api/journey/' + OWNER);
+    const d = await res.json();
+    laps = d.laps || 0;
+  } catch(e) { laps = 0; }
+  updateLapBadge();
+}
+
+function updateLapBadge(){
+  document.getElementById('lapBadge').textContent = '🏁 ' + (laps+1) + 'しゅうめ';
+}
+
+function startLap(){
+  order = shuffle(pool);
+  idx = 0; correctCount = 0;
+  startTime = Date.now();
+  showQuestion();
+}
+
+function pickHint(pref){
+  return pref.hints[Math.floor(Math.random()*pref.hints.length)];
+}
+
+function showQuestion(){
+  answering = true;
+  const correct = order[idx];
+  document.getElementById('hint').textContent = 'ヒント：' + pickHint(correct);
+  // 羽梛だけ県庁所在地ヒントを時々出す
+  document.getElementById('capital').textContent = '';
+  document.getElementById('nowEmoji').textContent = '🚉';
+  document.getElementById('nowLabel').textContent = 'つぎは どこの けん？';
+
+  // 進捗
+  document.getElementById('jCount').textContent = idx + ' / ' + TOTAL + ' けん';
+  document.getElementById('jFill').style.width = (idx/TOTAL*100) + '%';
+
+  // 4択（正解＋ランダム3）
+  let choices = [correct];
+  let others = shuffle(pool.filter(p=>p.name !== correct.name)).slice(0,3);
+  choices = shuffle(choices.concat(others));
+
+  const cont = document.getElementById('choices');
+  cont.innerHTML = '';
+  choices.forEach(c=>{
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = c.name;
+    btn.onclick = ()=> answer(c, correct, btn);
+    cont.appendChild(btn);
+  });
+}
+
+function answer(chosen, correct, btn){
+  if(!answering) return;
+  answering = false;
+  const buttons = document.querySelectorAll('.choice-btn');
+  buttons.forEach(b=>{
+    if(b.textContent === correct.name) b.classList.add('correct');
+    else if(b === btn) b.classList.add('wrong');
+    b.onclick = null;
+  });
+
+  if(chosen.name === correct.name){
+    correctCount++;
+    document.getElementById('nowEmoji').textContent = correct.emoji;
+    document.getElementById('nowLabel').textContent = correct.name + '！せいかい🎉';
+  } else {
+    document.getElementById('nowEmoji').textContent = correct.emoji;
+    document.getElementById('nowLabel').textContent = 'こたえは ' + correct.name;
+  }
+
+  setTimeout(()=>{
+    idx++;
+    if(idx >= TOTAL) finishLap();
+    else showQuestion();
+  }, 1100);
+}
+
+async function finishLap(){
+  const sec = Math.floor((Date.now() - startTime)/1000);
+  const pt = correctCount * 5;
+  if(pt > 0) addPoints(pt, 'social', 'たびクイズ ' + correctCount + 'けんせいかい');
+
+  // 周回保存
+  let newLaps = laps + 1;
+  try {
+    const res = await fetch('/api/journey/' + OWNER, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ time: sec })
+    });
+    const d = await res.json();
+    if(d.data) newLaps = d.data.laps;
+  } catch(e) {}
+  laps = newLaps;
+
+  // バッジ判定
+  let badge = '🥉', badgeName = 'はじめての日本一周';
+  if(laps >= 10){ badge='🥇'; badgeName='日本マスター'; }
+  else if(laps >= 5){ badge='🥈'; badgeName='たびの たつじん'; }
+
+  document.getElementById('goalBadge').textContent = badge;
+  document.getElementById('goalTitle').textContent = laps + 'しゅう たっせい！';
+  document.getElementById('goalLaps').textContent = badgeName + ' バッジ ゲット！';
+  document.getElementById('goalTime').textContent = '⏱️ ' + sec + 'びょう　⭕ ' + correctCount + '/' + TOTAL + 'けん';
+  document.getElementById('goalPt').textContent = '⭐ +' + pt + 'pt';
+  document.getElementById('jFill').style.width = '100%';
+  document.getElementById('jCount').textContent = TOTAL + ' / ' + TOTAL + ' けん';
+  document.getElementById('goalOverlay').classList.add('show');
+}
+
+function nextLap(){
+  document.getElementById('goalOverlay').classList.remove('show');
+  updateLapBadge();
+  startLap();
+}
+
+(async function init(){
+  await loadJourney();
+  startLap();
+})();
+</script>
+
+</body>
+</html>
