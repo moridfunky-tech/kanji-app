@@ -136,19 +136,23 @@ app.post('/api/pet/:owner', async (req, res) => {
 
 app.get('/api/mistakes/:owner', async (req, res) => {
   try {
-    const data = await kvGet('mistakes_' + req.params.owner);
-    res.json(data || []);
+    var data = await kvGet('mistakes_' + req.params.owner);
+    if (!Array.isArray(data)) data = [];
+    res.json(data);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('mistakes GET error:', e.message);
+    res.json([]);
   }
 });
 
 app.post('/api/mistakes/:owner', async (req, res) => {
   try {
-    const mistakes = req.body.mistakes || [];
-    const existing = await kvGet('mistakes_' + req.params.owner) || [];
+    const mistakes = Array.isArray(req.body.mistakes) ? req.body.mistakes : [];
+    var existing = await kvGet('mistakes_' + req.params.owner);
+    if (!Array.isArray(existing)) existing = [];
     const merged = existing.slice();
     mistakes.forEach(function(m) {
+      if (!m || !m.k) return;
       const found = merged.find(function(e){ return e.k === m.k; });
       if (found) { found.cnt = (found.cnt || 1) + (m.cnt || 1); found.y = m.y; }
       else merged.push({ k: m.k, y: m.y, cnt: m.cnt || 1 });
@@ -157,6 +161,7 @@ app.post('/api/mistakes/:owner', async (req, res) => {
     await kvSet('mistakes_' + req.params.owner, merged.slice(0, 50));
     res.json({ success: true });
   } catch (e) {
+    console.error('mistakes POST error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
@@ -275,6 +280,34 @@ app.post('/api/journey/:owner', async (req, res) => {
     await kvSet('journey_' + owner, data);
     res.json({ success: true, data: data });
   } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// レポート用：2人分のデータをまとめて返す
+app.get('/api/report', async (req, res) => {
+  try {
+    const result = {};
+    for (const owner of ['kanka', 'hanano']) {
+      var pet = await kvGet('pet_' + owner);
+      if (typeof pet === 'string') { try { pet = JSON.parse(pet); } catch(e){} }
+      if (!pet || typeof pet !== 'object') pet = null;
+      var mistakes = await kvGet('mistakes_' + owner);
+      if (!Array.isArray(mistakes)) mistakes = [];
+      var journey = await kvGet('journey_' + owner) || { laps: 0, bestTime: null };
+      result[owner] = {
+        pts: pet ? (pet.totalPts || pet.pts || 0) : 0,
+        ptsByType: pet ? (pet.ptsByType || {}) : {},
+        exp: pet ? (pet.exp || 0) : 0,
+        stage: pet ? (pet.stage || 0) : 0,
+        history: pet ? (pet.history || []) : [],
+        mistakes: mistakes.slice(0, 10),
+        laps: journey.laps || 0
+      };
+    }
+    res.json(result);
+  } catch (e) {
+    console.error('report error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
