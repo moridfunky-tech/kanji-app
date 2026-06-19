@@ -145,6 +145,7 @@ async function gradeAll(){
   }
   const score=allResults.filter(r=>r.correct).length;
   document.getElementById('sv').textContent=score;
+  fetch('/api/activity/kanka',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'test'})}).catch(function(){});
   btn.textContent='もう一度採点する';btn.disabled=false;
   const today=new Date().toLocaleDateString('ja-JP');
   try{

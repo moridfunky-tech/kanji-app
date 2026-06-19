@@ -117,9 +117,37 @@ function childCard(owner, data){
       '<div><div class="child-name">'+info.name+'</div><div class="child-grade">'+info.grade+'</div></div></div>'+
     '<div class="total-pt"><div class="pt-num">'+data.pts+'</div><div class="pt-label">pt</div>'+
       '<div class="pt-lap">🗾 '+data.laps+'しゅう</div></div>'+
+    '<div class="subject-section"><div class="section-label">今週の がくしゅう</div>'+weekCalendar(data.activity)+'</div>'+
     '<div class="subject-section"><div class="section-label">科目別ポイント</div>'+subjects+'</div>'+
     '<div class="weak-section"><div class="section-label">苦手な漢字 TOP5</div>'+weak+'</div>'+
   '</div>';
+}
+
+// 今週（月〜土）のカレンダー
+function weekCalendar(activity){
+  activity = activity || {};
+  const days = ['月','火','水','木','金','土'];
+  // 今週の月曜を求める（日本時間）
+  const now = new Date(Date.now() + 9*60*60*1000);
+  const dow = (now.getUTCDay() + 6) % 7; // 月=0
+  const monday = new Date(now);
+  monday.setUTCDate(now.getUTCDate() - dow);
+
+  let drillRow = '<div style="display:flex;gap:3px;align-items:center"><div style="width:40px;font-size:8pt;color:#888">練習</div>';
+  let testRow  = '<div style="display:flex;gap:3px;align-items:center;margin-top:4px"><div style="width:40px;font-size:8pt;color:#888">テスト</div>';
+  let headRow  = '<div style="display:flex;gap:3px;align-items:center"><div style="width:40px"></div>';
+
+  for(let i=0;i<6;i++){
+    const d = new Date(monday);
+    d.setUTCDate(monday.getUTCDate()+i);
+    const key = d.toISOString().slice(0,10);
+    const a = activity[key] || {};
+    headRow  += '<div style="flex:1;text-align:center;font-size:8pt;color:#999">'+days[i]+'</div>';
+    drillRow += '<div style="flex:1;text-align:center;font-size:12pt">'+(a.drill?'✅':'<span style="color:#ddd">・</span>')+'</div>';
+    testRow  += '<div style="flex:1;text-align:center;font-size:12pt">'+(a.test?'✅':'<span style="color:#ddd">・</span>')+'</div>';
+  }
+  headRow+='</div>'; drillRow+='</div>'; testRow+='</div>';
+  return headRow + drillRow + testRow;
 }
 
 function taskBlock(owner, data){

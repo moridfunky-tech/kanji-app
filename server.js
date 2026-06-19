@@ -295,6 +295,8 @@ app.get('/api/report', async (req, res) => {
       var mistakes = await kvGet('mistakes_' + owner);
       if (!Array.isArray(mistakes)) mistakes = [];
       var journey = await kvGet('journey_' + owner) || { laps: 0, bestTime: null };
+      var activity = await kvGet('activity_' + owner);
+      if (!activity || typeof activity !== 'object') activity = {};
       result[owner] = {
         pts: pet ? (pet.totalPts || pet.pts || 0) : 0,
         ptsByType: pet ? (pet.ptsByType || {}) : {},
@@ -302,13 +304,52 @@ app.get('/api/report', async (req, res) => {
         stage: pet ? (pet.stage || 0) : 0,
         history: pet ? (pet.history || []) : [],
         mistakes: mistakes.slice(0, 10),
-        laps: journey.laps || 0
+        laps: journey.laps || 0,
+        activity: activity
       };
     }
     res.json(result);
   } catch (e) {
     console.error('report error:', e.message);
     res.status(500).json({ error: e.message });
+  }
+});
+
+// 学習実施記録（日付ごとに練習・テストをやったか）
+// activity_{owner} = { "2026-06-19": {drill:true, test:true}, ... }
+app.post('/api/activity/:owner', async (req, res) => {
+  try {
+    const owner = req.params.owner === 'hanano' ? 'hanano' : 'kanka';
+    const kind = req.body.kind; // 'drill' or 'test'
+    if (kind !== 'drill' && kind !== 'test') { res.status(400).json({ error: 'bad kind' }); return; }
+    // 日本時間の日付
+    const now = new Date(Date.now() + 9*60*60*1000);
+    const dateKey = now.toISOString().slice(0,10);
+    var data = await kvGet('activity_' + owner);
+    if (!data || typeof data !== 'object') data = {};
+    if (!data[dateKey]) data[dateKey] = {};
+    data[dateKey][kind] = true;
+    // 古い記録は60日分だけ保持
+    const keys = Object.keys(data).sort();
+    if (keys.length > 60) {
+      keys.slice(0, keys.length - 60).forEach(function(k){ delete data[k]; });
+    }
+    await kvSet('activity_' + owner, data);
+    res.json({ success: true });
+  } catch (e) {
+    console.error('activity error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+app.get('/api/activity/:owner', async (req, res) => {
+  try {
+    const owner = req.params.owner === 'hanano' ? 'hanano' : 'kanka';
+    var data = await kvGet('activity_' + owner);
+    if (!data || typeof data !== 'object') data = {};
+    res.json(data);
+  } catch (e) {
+    res.json({});
   }
 });
 
