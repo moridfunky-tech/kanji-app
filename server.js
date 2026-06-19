@@ -353,4 +353,66 @@ app.get('/api/activity/:owner', async (req, res) => {
   }
 });
 
+// LINE通知（友だち全員にbroadcast）
+const LINE_TOKEN = process.env.LINE_TOKEN;
+
+async function lineBroadcast(messages) {
+  if (!LINE_TOKEN) { console.log('LINE_TOKEN未設定'); return false; }
+  try {
+    const res = await fetch('https://api.line.me/v2/bot/message/broadcast', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + LINE_TOKEN
+      },
+      body: JSON.stringify({ messages: messages })
+    });
+    if (!res.ok) {
+      const t = await res.text();
+      console.error('LINE error:', res.status, t);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    console.error('LINE broadcast error:', e.message);
+    return false;
+  }
+}
+
+// 漢字テスト結果をLINEに送る
+app.post('/api/line/test-result', async (req, res) => {
+  try {
+    const owner = req.body.owner === 'hanano' ? 'hanano' : 'kanka';
+    const childName = owner === 'kanka' ? 'カンカン' : '羽梛';
+    const score = Number(req.body.score) || 0;
+    const total = Number(req.body.total) || 15;
+    const imageUrl = req.body.imageUrl; // 公開URL（任意）
+
+    const now = new Date(Date.now() + 9*60*60*1000);
+    const dateStr = (now.getUTCMonth()+1) + '月' + now.getUTCDate() + '日';
+
+    let text = '📚 ' + childName + ' の漢字テスト結果\n'
+      + '📅 ' + dateStr + '\n'
+      + '✏️ ' + score + ' / ' + total + ' 点\n\n'
+      + '※AI採点なので、答案を確認してね';
+
+    const messages = [{ type: 'text', text: text }];
+    if (imageUrl && /^https:\/\//.test(imageUrl)) {
+      messages.push({ type: 'image', originalContentUrl: imageUrl, previewImageUrl: imageUrl });
+    }
+
+    const ok = await lineBroadcast(messages);
+    res.json({ success: ok });
+  } catch (e) {
+    console.error('line test-result error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// LINE送信テスト用
+app.get('/api/line/test', async (req, res) => {
+  const ok = await lineBroadcast([{ type:'text', text:'森脇ファミリー学習からのテスト送信です📚 とどいたかな？' }]);
+  res.json({ success: ok });
+});
+
 app.listen(3000, function(){ console.log('server running'); });
