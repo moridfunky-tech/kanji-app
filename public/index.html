@@ -58,5 +58,31 @@ h1{
     <div class="card-label">5年生メニュー →</div>
   </a>
 </div>
+
+<div class="common-menu">
+  <a class="common-btn ask" href="ask.html">
+    <span class="common-icon">🦊</span>
+    <span>なんでもしつもん</span>
+  </a>
+  <a class="common-btn report" href="report.html">
+    <span class="common-icon">📊</span>
+    <span>ほごしゃレポート</span>
+  </a>
+</div>
+
+<style>
+.common-menu{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:28px}
+.common-btn{
+  display:flex;align-items:center;gap:8px;
+  background:white;border-radius:30px;padding:12px 22px;
+  text-decoration:none;color:#1a1a2e;font-size:11pt;font-weight:700;
+  box-shadow:0 3px 12px rgba(0,0,0,0.07);transition:transform 0.15s;
+  border:1.5px solid #eee;
+}
+.common-btn:hover{transform:translateY(-2px)}
+.common-icon{font-size:18pt}
+.common-btn.ask{border-color:#E8553F}
+.common-btn.report{border-color:#888}
+</style>
 </body>
 </html>

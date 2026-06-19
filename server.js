@@ -173,4 +173,51 @@ app.get('/api/week/:owner', async (req, res) => {
   }
 });
 
+// なんでもしつもん（子供向けチャット）
+app.post('/api/ask', async (req, res) => {
+  try {
+    const question = (req.body.question || '').slice(0, 500);
+    const history = Array.isArray(req.body.history) ? req.body.history.slice(-6) : [];
+    if (!question.trim()) { res.json({ answer: '\u3057\u3064\u3082\u3093\u3092\u3044\u308c\u3066\u306d\uff01' }); return; }
+
+    const systemPrompt = [
+      'あなたは小学生の子供向けの、やさしい先生「きつね先生」です。',
+      '小学校3年生〜5年生の子供が読んでわかるように、ひらがなを多めに、やさしい言葉で答えてください。',
+      '回答は短く、2〜3文程度にしてください。絵文字を1〜2個つかって親しみやすくしてください。',
+      '難しい漢字をつかうときは、その漢字のあとに（かっこ）でよみがなをつけてください。例：植物（しょくぶつ）',
+      '',
+      '【重要な安全ルール】',
+      '次のような質問には、具体的に答えず「それは おうちのひとに きいてみてね😊」とだけ返してください：',
+      '- 暴力、武器、危険なこと、ケガや死に関すること',
+      '- 性的なこと、大人向けの話題、恋愛の踏み込んだ話',
+      '- 犯罪、違法なこと、危険な遊びややり方',
+      '- 個人情報（住所、電話番号、パスワードなど）をきく質問',
+      '- 薬、お酒、たばこ、ギャンブルに関すること',
+      '- だれかを傷つけたり、いじめたりする方法',
+      'これらに少しでも当てはまりそうな場合は、絶対に具体的な内容を答えず、おうちのひとに聞くよう促してください。',
+      '勉強、言葉の意味、自然、科学、生き物、歴史、地理など、健全な学びの質問には楽しく答えてください。'
+    ].join('\n');
+
+    const messages = [];
+    history.forEach(function(h) {
+      if (h.role === 'user' || h.role === 'assistant') {
+        messages.push({ role: h.role, content: String(h.content || '').slice(0, 500) });
+      }
+    });
+    messages.push({ role: 'user', content: question });
+
+    const response = await client.messages.create({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 300,
+      system: systemPrompt,
+      messages: messages
+    });
+    const answer = response.content[0].text.trim();
+    res.json({ answer: answer });
+  } catch (e) {
+    console.error('ask error:', e.message);
+    res.status(500).json({ error: e.message, answer: 'ごめんね、いまうまくこたえられないみたい😢 もういちどきいてね。' });
+  }
+});
+
 app.listen(3000, function(){ console.log('server running'); });
