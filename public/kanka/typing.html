@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>タイピングゲーム</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700&family=M+PLUS+1+Code:wght@400;500;700&display=swap');
+  :root { --red:#E8553F; --cream:#FFF9F3; --ink:#3A3A3A; --green:#27AE60; --gray:#DDD; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Zen Maru Gothic',sans-serif; background:var(--cream); color:var(--ink); min-height:100vh; display:flex; flex-direction:column; }
+  .header { background:var(--red); color:white; padding:12px 16px; display:flex; align-items:center; gap:10px; }
+  .back-btn { color:white; text-decoration:none; font-size:13pt; font-weight:700; }
+  .header-title { font-size:13pt; font-weight:700; }
+  .status-bar { display:flex; background:white; border-bottom:2px solid #F0E5DC; }
+  .status-item { flex:1; text-align:center; padding:10px 4px; border-right:1px solid #F0E5DC; }
+  .status-item:last-child { border-right:none; }
+  .status-num { font-family:'M PLUS 1 Code',monospace; font-size:17pt; font-weight:700; color:var(--red); line-height:1; }
+  .status-label { font-size:8pt; color:#999; margin-top:2px; }
+  .game { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px 16px; gap:18px; }
+  .word-card { background:white; border-radius:16px; padding:28px 32px; box-shadow:0 4px 16px rgba(232,85,63,0.12); text-align:center; width:100%; max-width:420px; }
+  .word-img { font-size:52px; margin-bottom:10px; }
+  .word-kana { font-size:30pt; font-weight:700; letter-spacing:0.08em; margin-bottom:14px; }
+  .romaji-display { font-family:'M PLUS 1 Code',monospace; font-size:26pt; font-weight:700; letter-spacing:0.08em; display:flex; justify-content:center; gap:2px; flex-wrap:wrap; }
+  .char-done { color:var(--green); }
+  .char-next { color:var(--red); border-bottom:3px solid var(--red); animation:blink 1s infinite; }
+  .char-todo { color:var(--gray); }
+  @keyframes blink { 50% { opacity:0.3; } }
+  .progress-wrap { width:100%; max-width:420px; }
+  .progress-track { height:10px; background:#EEE; border-radius:5px; overflow:hidden; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,var(--red),#FF8866); border-radius:5px; transition:width 0.3s; }
+  .progress-text { text-align:center; font-size:9pt; color:#999; margin-top:6px; }
+  .keyboard { background:white; padding:12px 8px 20px; box-shadow:0 -2px 8px rgba(0,0,0,0.05); }
+  .key-row { display:flex; justify-content:center; gap:5px; margin-bottom:5px; }
+  .key { flex:1; max-width:36px; aspect-ratio:1; background:#F5F0EB; border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:'M PLUS 1 Code',monospace; font-size:11pt; font-weight:500; color:#888; cursor:pointer; user-select:none; }
+  .key.highlight { background:var(--red); color:white; transform:scale(1.08); box-shadow:0 2px 6px rgba(232,85,63,0.4); }
+  .key:active { background:#ddd; }
+  /* 結果画面 */
+  .result { display:none; flex-direction:column; align-items:center; justify-content:center; flex:1; padding:24px; gap:16px; }
+  .result.show { display:flex; }
+  .result-emoji { font-size:64px; }
+  .result-title { font-size:18pt; font-weight:700; }
+  .result-stats { background:white; border-radius:16px; padding:20px 28px; box-shadow:0 4px 16px rgba(0,0,0,0.08); width:100%; max-width:340px; }
+  .result-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px dashed #eee; font-size:12pt; }
+  .result-row:last-child { border-bottom:none; }
+  .result-val { font-weight:700; color:var(--red); font-family:'M PLUS 1 Code',monospace; }
+  .retry-btn { background:var(--red); color:white; border:none; border-radius:24px; padding:14px 40px; font-size:13pt; font-weight:700; font-family:inherit; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">←</a>
+  <div class="header-title">⌨️ タイピングゲーム</div>
+</div>
+
+<div class="status-bar">
+  <div class="status-item"><div class="status-num" id="qNum">1</div><div class="status-label">もんめ</div></div>
+  <div class="status-item"><div class="status-num" id="okNum">0</div><div class="status-label">せいかい</div></div>
+  <div class="status-item"><div class="status-num" id="accNum">100<span style="font-size:10pt">%</span></div><div class="status-label">せいかくさ</div></div>
+  <div class="status-item"><div class="status-num" id="timeNum">0</div><div class="status-label">びょう</div></div>
+</div>
+
+<div class="game" id="gameArea">
+  <div class="word-card">
+    <div class="word-img" id="wordImg">🐱</div>
+    <div class="word-kana" id="wordKana">ねこ</div>
+    <div class="romaji-display" id="romajiDisp"></div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-track"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+    <div class="progress-text" id="progText">10もんちゅう 1もんめ</div>
+  </div>
+</div>
+
+<div class="result" id="resultScreen">
+  <div class="result-emoji">🎉</div>
+  <div class="result-title">クリア！</div>
+  <div class="result-stats">
+    <div class="result-row"><span>せいかい</span><span class="result-val" id="rOk">10/10</span></div>
+    <div class="result-row"><span>せいかくさ</span><span class="result-val" id="rAcc">100%</span></div>
+    <div class="result-row"><span>クリアタイム</span><span class="result-val" id="rTime">42びょう</span></div>
+    <div class="result-row"><span>かくとくポイント</span><span class="result-val" id="rPt">+50pt</span></div>
+  </div>
+  <button class="retry-btn" onclick="location.reload()">もういちど</button>
+</div>
+
+<div class="keyboard" id="keyboard">
+  <div class="key-row" data-keys="qwertyuiop"></div>
+  <div class="key-row" data-keys="asdfghjkl"></div>
+  <div class="key-row" data-keys="zxcvbnm"></div>
+</div>
+
+<script src="../pet_points.js"></script>
+<script>
+// 問題プール（絵文字つきひらがな単語）
+const WORDS = [
+  {kana:'ねこ', romaji:'neko', emoji:'🐱'},
+  {kana:'いぬ', romaji:'inu', emoji:'🐶'},
+  {kana:'うさぎ', romaji:'usagi', emoji:'🐰'},
+  {kana:'ぞう', romaji:'zou', emoji:'🐘'},
+  {kana:'さかな', romaji:'sakana', emoji:'🐟'},
+  {kana:'とり', romaji:'tori', emoji:'🐦'},
+  {kana:'くるま', romaji:'kuruma', emoji:'🚗'},
+  {kana:'でんしゃ', romaji:'densya', emoji:'🚃'},
+  {kana:'ひこうき', romaji:'hikouki', emoji:'✈️'},
+  {kana:'りんご', romaji:'ringo', emoji:'🍎'},
+  {kana:'ばなな', romaji:'banana', emoji:'🍌'},
+  {kana:'いちご', romaji:'ichigo', emoji:'🍓'},
+  {kana:'ぱん', romaji:'pan', emoji:'🍞'},
+  {kana:'たまご', romaji:'tamago', emoji:'🥚'},
+  {kana:'はな', romaji:'hana', emoji:'🌸'},
+  {kana:'き', romaji:'ki', emoji:'🌳'},
+  {kana:'やま', romaji:'yama', emoji:'⛰️'},
+  {kana:'うみ', romaji:'umi', emoji:'🌊'},
+  {kana:'ほし', romaji:'hosi', emoji:'⭐'},
+  {kana:'つき', romaji:'tuki', emoji:'🌙'},
+];
+
+const TOTAL = 10;
+let questions = [];
+let current = 0;
+let typed = '';
+let okCount = 0;
+let totalKeystrokes = 0;
+let mistakeKeystrokes = 0;
+let startTime = 0;
+let timerInterval = null;
+
+function shuffle(arr){ return [...arr].sort(()=>Math.random()-0.5); }
+
+function init(){
+  questions = shuffle(WORDS).slice(0, TOTAL);
+  current = 0; okCount = 0; totalKeystrokes = 0; mistakeKeystrokes = 0;
+  startTime = Date.now();
+  timerInterval = setInterval(updateTimer, 200);
+  buildKeyboard();
+  showQuestion();
+}
+
+function updateTimer(){
+  const sec = Math.floor((Date.now() - startTime)/1000);
+  document.getElementById('timeNum').textContent = sec;
+}
+
+function buildKeyboard(){
+  document.querySelectorAll('.key-row').forEach(row=>{
+    const keys = row.dataset.keys.split('');
+    row.innerHTML = '';
+    keys.forEach(k=>{
+      const div = document.createElement('div');
+      div.className = 'key';
+      div.dataset.key = k;
+      div.textContent = k;
+      div.addEventListener('click', ()=> handleInput(k));
+      row.appendChild(div);
+    });
+  });
+}
+
+function showQuestion(){
+  const q = questions[current];
+  typed = '';
+  document.getElementById('wordImg').textContent = q.emoji;
+  document.getElementById('wordKana').textContent = q.kana;
+  document.getElementById('qNum').textContent = current + 1;
+  document.getElementById('progText').textContent = TOTAL + 'もんちゅう ' + (current+1) + 'もんめ';
+  document.getElementById('progFill').style.width = (current/TOTAL*100) + '%';
+  renderRomaji();
+  highlightNextKey();
+}
+
+function renderRomaji(){
+  const q = questions[current];
+  const disp = document.getElementById('romajiDisp');
+  disp.innerHTML = '';
+  for(let i=0; i<q.romaji.length; i++){
+    const span = document.createElement('span');
+    if(i < typed.length) span.className = 'char-done';
+    else if(i === typed.length) span.className = 'char-next';
+    else span.className = 'char-todo';
+    span.textContent = q.romaji[i];
+    disp.appendChild(span);
+  }
+}
+
+function highlightNextKey(){
+  document.querySelectorAll('.key').forEach(k=> k.classList.remove('highlight'));
+  const q = questions[current];
+  const nextChar = q.romaji[typed.length];
+  if(nextChar){
+    const keyEl = document.querySelector('.key[data-key="'+nextChar+'"]');
+    if(keyEl) keyEl.classList.add('highlight');
+  }
+}
+
+function handleInput(char){
+  const q = questions[current];
+  const expected = q.romaji[typed.length];
+  if(!expected) return;
+  totalKeystrokes++;
+  if(char === expected){
+    typed += char;
+    renderRomaji();
+    highlightNextKey();
+    if(typed === q.romaji){
+      okCount++;
+      document.getElementById('okNum').textContent = okCount;
+      setTimeout(nextQuestion, 250);
+    }
+  } else {
+    mistakeKeystrokes++;
+  }
+  updateAccuracy();
+}
+
+function updateAccuracy(){
+  const acc = totalKeystrokes === 0 ? 100 : Math.round((totalKeystrokes - mistakeKeystrokes)/totalKeystrokes*100);
+  document.getElementById('accNum').innerHTML = acc + '<span style="font-size:10pt">%</span>';
+}
+
+function nextQuestion(){
+  current++;
+  if(current >= TOTAL){
+    showResult();
+  } else {
+    showQuestion();
+  }
+}
+
+function showResult(){
+  clearInterval(timerInterval);
+  const sec = Math.floor((Date.now() - startTime)/1000);
+  const acc = totalKeystrokes === 0 ? 100 : Math.round((totalKeystrokes - mistakeKeystrokes)/totalKeystrokes*100);
+  const pt = okCount * 5;
+  document.getElementById('gameArea').style.display = 'none';
+  document.getElementById('keyboard').style.display = 'none';
+  document.getElementById('resultScreen').classList.add('show');
+  document.getElementById('rOk').textContent = okCount + '/' + TOTAL;
+  document.getElementById('rAcc').textContent = acc + '%';
+  document.getElementById('rTime').textContent = sec + 'びょう';
+  document.getElementById('rPt').textContent = '+' + pt + 'pt';
+  if(pt > 0) addPoints(pt, 'romaji', 'タイピング ' + okCount + '問クリア');
+}
+
+// 物理キーボード対応
+document.addEventListener('keydown', (e)=>{
+  const k = e.key.toLowerCase();
+  if(/^[a-z]$/.test(k)){
+    handleInput(k);
+  }
+});
+
+init();
+</script>
+
+</body>
+</html>

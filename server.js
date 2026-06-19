@@ -174,27 +174,41 @@ app.get('/api/week/:owner', async (req, res) => {
 });
 
 // なんでもしつもん（子供向けチャット）
-app.post('/api/ask', async (req, res) => {
+// ゆるい記憶つき なんでもしつもん
+app.post('/api/ask/:owner', async (req, res) => {
   try {
+    const owner = req.params.owner === 'hanano' ? 'hanano' : 'kanka';
     const question = (req.body.question || '').slice(0, 500);
-    const history = Array.isArray(req.body.history) ? req.body.history.slice(-6) : [];
     if (!question.trim()) { res.json({ answer: '\u3057\u3064\u3082\u3093\u3092\u3044\u308c\u3066\u306d\uff01' }); return; }
+
+    // KVから会話履歴を読み込み（24時間でリセット）
+    var stored = await kvGet('ask_' + owner);
+    var history = [];
+    const DAY = 24 * 60 * 60 * 1000;
+    if (stored && stored.updated && (Date.now() - stored.updated) < DAY && Array.isArray(stored.history)) {
+      history = stored.history.slice(-20); // 直近10往復（20メッセージ）
+    }
 
     const systemPrompt = [
       'あなたは小学生の子供向けの、やさしい先生「きつね先生」です。',
       '小学校3年生〜5年生の子供が読んでわかるように、ひらがなを多めに、やさしい言葉で答えてください。',
       '回答は短く、2〜3文程度にしてください。絵文字を1〜2個つかって親しみやすくしてください。',
       '難しい漢字をつかうときは、その漢字のあとに（かっこ）でよみがなをつけてください。例：植物（しょくぶつ）',
+      '前の会話の流れがあれば、それを覚えていて自然につなげて答えてください。',
       '',
       '【重要な安全ルール】',
       '次のような質問には、具体的に答えず「それは おうちのひとに きいてみてね😊」とだけ返してください：',
       '- 暴力、武器、危険なこと、ケガや死に関すること',
       '- 性的なこと、大人向けの話題、恋愛の踏み込んだ話',
       '- 犯罪、違法なこと、危険な遊びややり方',
-      '- 個人情報（住所、電話番号、パスワードなど）をきく質問',
       '- 薬、お酒、たばこ、ギャンブルに関すること',
       '- だれかを傷つけたり、いじめたりする方法',
       'これらに少しでも当てはまりそうな場合は、絶対に具体的な内容を答えず、おうちのひとに聞くよう促してください。',
+      '',
+      '【個人情報の取り扱い】',
+      '子供の住所、電話番号、学校名、友達の名前などの個人情報は、こちらから聞かないでください。',
+      'もし子供が個人情報を話しても、それには触れず、話題をやさしく勉強や興味のあることに戻してください。',
+      '',
       '勉強、言葉の意味、自然、科学、生き物、歴史、地理など、健全な学びの質問には楽しく答えてください。'
     ].join('\n');
 
@@ -213,10 +227,29 @@ app.post('/api/ask', async (req, res) => {
       messages: messages
     });
     const answer = response.content[0].text.trim();
+
+    // 会話履歴をKVに保存（直近10往復）
+    var newHistory = history.concat([
+      { role: 'user', content: question },
+      { role: 'assistant', content: answer }
+    ]).slice(-20);
+    await kvSet('ask_' + owner, { history: newHistory, updated: Date.now() });
+
     res.json({ answer: answer });
   } catch (e) {
     console.error('ask error:', e.message);
     res.status(500).json({ error: e.message, answer: 'ごめんね、いまうまくこたえられないみたい😢 もういちどきいてね。' });
+  }
+});
+
+// 会話履歴のクリア
+app.post('/api/ask/:owner/clear', async (req, res) => {
+  try {
+    const owner = req.params.owner === 'hanano' ? 'hanano' : 'kanka';
+    await kvSet('ask_' + owner, { history: [], updated: Date.now() });
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
   }
 });
 
