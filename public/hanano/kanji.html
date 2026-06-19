@@ -146,6 +146,7 @@ async function gradeAll(){
   const score=allResults.filter(r=>r.correct).length;
   document.getElementById('sv').textContent=score;
   fetch('/api/activity/hanano',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'test'})}).catch(function(){});
+  sendToLine(score);
   btn.textContent='もう一度採点する';btn.disabled=false;
   const today=new Date().toLocaleDateString('ja-JP');
   try{
@@ -160,6 +161,41 @@ async function gradeAll(){
   }catch(e){
     document.getElementById('result-msg').textContent=`${score}/15点　メール送信エラー`;
   }
+}
+
+async function sendToLine(score){
+  try{
+    // 全問のキャンバスを1枚に合成
+    const cols=5, rows=Math.ceil(15/cols);
+    const cell=200, pad=8, labelH=20;
+    const W=cols*(cell+pad)+pad;
+    const H=rows*(cell+labelH+pad)+pad+40;
+    const big=document.createElement('canvas');
+    big.width=W; big.height=H;
+    const bx=big.getContext('2d');
+    bx.fillStyle='#ffffff'; bx.fillRect(0,0,W,H);
+    bx.fillStyle='#1a1a2e'; bx.font='bold 22px sans-serif';
+    bx.fillText('羽梛 の漢字テスト  '+score+'/15点', pad, 28);
+    for(let i=0;i<15;i++){
+      const cv=document.getElementById('cv'+i);
+      if(!cv) continue;
+      const col=i%cols, row=Math.floor(i/cols);
+      const x=pad+col*(cell+pad);
+      const y=40+pad+row*(cell+labelH+pad);
+      const r=allResults[i];
+      bx.fillStyle=r&&r.correct?'#27ae60':'#c0392b';
+      bx.font='bold 13px sans-serif';
+      bx.fillText((i+1)+'. '+(r?(r.correct?'⭕':'❌'):''), x, y-4);
+      bx.strokeStyle='#ccc'; bx.strokeRect(x,y,cell,cell);
+      bx.drawImage(cv, x, y, cell, cell);
+    }
+    const imgData=big.toDataURL('image/jpeg',0.7).split(',')[1];
+    // 画像保存してURL取得
+    const saveRes=await fetch('/api/image/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageData:imgData})});
+    const saveD=await saveRes.json();
+    // LINE送信
+    await fetch('/api/line/test-result',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({owner:'hanano',score:score,total:15,imageUrl:saveD.url})});
+  }catch(e){ console.error('LINE送信エラー',e); }
 }
 build();
 </script>

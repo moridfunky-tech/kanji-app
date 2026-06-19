@@ -415,4 +415,36 @@ app.get('/api/line/test', async (req, res) => {
   res.json({ success: ok });
 });
 
+// 画像を一時保存してURLを返す（base64 jpeg を受け取る）
+app.post('/api/image/save', async (req, res) => {
+  try {
+    const imageData = req.body.imageData; // base64（data:除く）
+    if (!imageData) { res.status(400).json({ error: 'no image' }); return; }
+    // KV上限対策（base64で約1.3MB以内に）
+    if (imageData.length > 1300000) { res.status(413).json({ error: 'image too large' }); return; }
+    // ランダムID
+    const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    await kvSet('img_' + id, { data: imageData, created: Date.now() });
+    const base = (req.headers['x-forwarded-proto'] || 'https') + '://' + req.headers.host;
+    res.json({ id: id, url: base + '/api/image/' + id });
+  } catch (e) {
+    console.error('image save error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// 画像を配信（LINEがアクセスする）
+app.get('/api/image/:id', async (req, res) => {
+  try {
+    const rec = await kvGet('img_' + req.params.id);
+    if (!rec || !rec.data) { res.status(404).send('not found'); return; }
+    const buf = Buffer.from(rec.data, 'base64');
+    res.setHeader('Content-Type', 'image/jpeg');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.send(buf);
+  } catch (e) {
+    res.status(500).send('error');
+  }
+});
+
 app.listen(3000, function(){ console.log('server running'); });
