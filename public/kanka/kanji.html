@@ -48,8 +48,9 @@ body{font-family:'Noto Sans JP',sans-serif;background:#f5f2ee;color:#1a1a2e}
   </div>
   <div id="result-msg" style="text-align:center;margin-top:12px;font-size:14pt;font-weight:700;color:#c0392b"></div>
 </div>
+<script src="../kanji_weeks.js"></script>
 <script>
-const qs=[
+let qs=[
   {q:'先生が',b:'し',a:'を読んだ。',ans:'詩'},
   {q:'家',b:'ぞく',a:'で旅行した。',ans:'族'},
   {q:'木の',b:'は',a:'が落ちた。',ans:'葉'},
@@ -197,7 +198,32 @@ async function sendToLine(score, allResults){
     await fetch('/api/line/test-result',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({owner:'kanka',score:score,total:15,imageUrl:saveD.url})});
   }catch(e){ console.error('LINE送信エラー',e); }
 }
-build();
+// 週データと繰り越しを読み込んでからビルド
+async function initWeek(){
+  try{
+    const wk = (typeof getCurrentWeek === 'function') ? getCurrentWeek() : 1;
+    let weekQs = (typeof getWeekKanji === 'function') ? getWeekKanji('kanka', wk) : null;
+    // 繰り越し（前週の間違い）を取得
+    let carry = [];
+    try{
+      const cres = await fetch('/api/carryover/kanka');
+      carry = await cres.json();
+      if(!Array.isArray(carry)) carry = [];
+      // 読み込んだ繰り越しは一旦クリア（今回のテスト結果で再設定される）
+      if(carry.length){ fetch('/api/carryover/kanka',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wrong:[]})}).catch(function(){}); }
+    }catch(e){ carry = []; }
+    if(weekQs && weekQs.length){
+      // 繰り越しを先頭に、その後に今週分。合計15問になるよう調整
+      const combined = carry.concat(weekQs);
+      qs = combined.slice(0, 15);
+    }
+    // 週表示があれば更新
+    const wl = document.getElementById('weekLabel');
+    if(wl) wl.textContent = '第' + wk + '週';
+  }catch(e){ /* 失敗時は既定のqsを使う */ }
+  build();
+}
+initWeek();
 </script>
 </body>
 </html>

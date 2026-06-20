@@ -184,17 +184,25 @@ const BG_EMOJI = {sky:'☁️',night:'🌙',sea:'🌊',forest:'🌳',rainbow:'�
 
 let data = {...defaultData};
 let prevStage = 0;
+let dataLoaded = false; // 正しく読み込めたか（falseの間は保存しない＝上書き防止）
 
 async function loadData(){
   try {
     const res = await fetch('/api/pet/' + owner);
+    if(!res.ok) throw new Error('bad response');
     let d = await res.json();
     if (typeof d === 'string') { try { d = JSON.parse(d); } catch(e2) {} }
-    if (!d || typeof d !== 'object') return {...defaultData};
+    if (!d || typeof d !== 'object') { dataLoaded = true; return {...defaultData}; }
+    dataLoaded = true; // 読み込み成功
     return {...defaultData, ...d, items:{...defaultData.items, ...(d.items||{})}, cosmetics:{...(d.cosmetics||{})}, equipped:{...defaultData.equipped, ...(d.equipped||{})}};
-  } catch(e) { return {...defaultData}; }
+  } catch(e) {
+    // 読み込み失敗：保存をブロックして既存データを守る
+    dataLoaded = false;
+    return {...defaultData};
+  }
 }
 async function saveData(){
+  if(!dataLoaded) return; // 読み込めていないときは絶対に保存しない
   data.lastUpdate = Date.now();
   try {
     await fetch('/api/pet/' + owner, {

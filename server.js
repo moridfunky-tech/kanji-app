@@ -447,4 +447,30 @@ app.get('/api/image/:id', async (req, res) => {
   }
 });
 
+// 管理用：ポイントを手動でセット（データ復旧用）
+// 例: /api/pet/kanka/setpts?pts=50&type=kanji
+app.get('/api/pet/:owner/setpts', async (req, res) => {
+  try {
+    const owner = req.params.owner === 'hanano' ? 'hanano' : 'kanka';
+    const pts = parseInt(req.query.pts, 10);
+    const type = req.query.type || 'kanji';
+    if (isNaN(pts)) { res.status(400).send('pts必須'); return; }
+    var data = await kvGet('pet_' + owner);
+    if (!data || typeof data !== 'object') {
+      data = { pts:0, totalPts:0, hunger:80, happy:70, exp:0, stage:0, route:'',
+               ptsByType:{kanji:0,math:0,english:0,romaji:0,social:0},
+               items:{}, cosmetics:{}, equipped:{hat:'',bg:''}, history:[], lastUpdate:Date.now() };
+    }
+    data.pts = pts;
+    data.totalPts = pts;
+    if (!data.ptsByType) data.ptsByType = {kanji:0,math:0,english:0,romaji:0,social:0};
+    data.ptsByType[type] = pts;
+    data.lastUpdate = Date.now();
+    await kvSet('pet_' + owner, data);
+    res.send('OK: ' + owner + ' のポイントを ' + pts + 'pt（' + type + '）にセットしました。アプリに戻って確認してください。');
+  } catch (e) {
+    res.status(500).send('error: ' + e.message);
+  }
+});
+
 app.listen(3000, function(){ console.log('server running'); });
