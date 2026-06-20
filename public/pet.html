@@ -225,7 +225,8 @@ function checkEvolution(){
   const newStage = calcStage(data.exp);
   if(newStage > data.stage){
     data.stage = newStage;
-    const route = data.route || 'yuusha';
+    let route = data.route || 'yuusha';
+    if(!EVO_STAGES[route]) route = 'yuusha';
     const s = EVO_STAGES[route][newStage];
     showMsg('🎉 しんか！「' + s.n + '」になったよ！');
     triggerEvolveAnim();
@@ -244,7 +245,8 @@ function triggerEvolveAnim(){
 function getStageInfo(){
   const stage = calcStage(data.exp);
   if(stage < 2 || !data.route) return EVO_STAGES.yuusha[stage]; // タマゴ・ヒナは共通
-  return EVO_STAGES[data.route][stage];
+  const route = EVO_STAGES[data.route] ? data.route : 'yuusha';
+  return EVO_STAGES[route][stage];
 }
 
 function getMood(){
