@@ -110,7 +110,7 @@ app.post('/api/pet/:owner/addpoints', async (req, res) => {
     };
     data.pts      = (data.pts      || 0) + pt;
     data.totalPts = (data.totalPts || 0) + pt;
-    data.exp      = (data.exp      || 0) + Math.floor(pt * 0.3);
+    data.exp      = (data.exp      || 0) + Math.floor(pt * 0.06);
     data.ptsByType = data.ptsByType || {kanji:0,math:0,english:0,romaji:0,social:0};
     if (data.ptsByType[type] !== undefined) data.ptsByType[type] += pt;
     data.history = data.history || [];

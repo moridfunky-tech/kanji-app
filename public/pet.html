@@ -8,67 +8,68 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Noto Sans JP','IPAGothic',sans-serif;background:#f7f4ef;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:12px}
 .back{align-self:flex-start;font-size:10pt;color:#555;text-decoration:none;background:white;padding:6px 14px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:12px}
-
-/* タブ */
 .tabs{display:flex;gap:4px;background:white;border-radius:12px;padding:4px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-.tab{padding:8px 20px;border-radius:8px;border:none;font-size:10pt;font-weight:700;cursor:pointer;background:transparent;color:#aaa;transition:all 0.2s}
+.tab{padding:8px 18px;border-radius:8px;border:none;font-size:10pt;font-weight:700;cursor:pointer;background:transparent;color:#aaa;transition:all 0.2s}
 .tab.active{background:#c0392b;color:white}
-
 .screen{display:none;width:100%;max-width:360px}
 .screen.active{display:block}
-
-/* 育成画面 */
-.pet-card{background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);padding:20px;margin-bottom:12px;text-align:center}
-.owner-name{font-size:9pt;color:#aaa;margin-bottom:8px}
-.pet-stage{font-size:80px;line-height:1;margin-bottom:8px;transition:all 0.5s}
-.pet-name{font-size:14pt;font-weight:700;color:#1a1a2e}
-.pet-mood{font-size:10pt;color:#aaa;margin-top:4px;min-height:20px}
-.gauge-wrap{margin:12px 0}
+/* 育成 */
+.pet-card{background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);padding:20px;margin-bottom:12px;text-align:center;position:relative;overflow:hidden}
+.pet-bg{position:absolute;inset:0;font-size:120px;opacity:0.06;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.owner-name{font-size:9pt;color:#aaa;margin-bottom:4px;position:relative}
+.route-tag{display:inline-block;font-size:8pt;background:#fff0f0;color:#c0392b;padding:2px 10px;border-radius:10px;margin-bottom:8px;position:relative}
+.pet-stage{font-size:80px;line-height:1;margin-bottom:8px;transition:all 0.5s;position:relative}
+.pet-stage.evolving{animation:evolve 1.2s ease}
+@keyframes evolve{0%{transform:scale(1)}30%{transform:scale(1.3) rotate(-10deg);filter:brightness(2)}60%{transform:scale(1.3) rotate(10deg);filter:brightness(2)}100%{transform:scale(1)}}
+.pet-name{font-size:15pt;font-weight:700;color:#1a1a2e;position:relative}
+.pet-mood{font-size:10pt;color:#aaa;margin-top:4px;min-height:20px;position:relative}
+.stage-badge{font-size:8pt;color:#bba;margin-top:2px;position:relative}
+.gauge-wrap{margin:12px 0;position:relative}
 .gauge-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.gauge-label{font-size:9pt;color:#555;min-width:52px}
+.gauge-label{font-size:9pt;color:#555;min-width:60px;text-align:left}
 .gauge-bar{flex:1;background:#f0e8e8;border-radius:4px;height:8px;overflow:hidden}
 .gauge-fill{height:100%;border-radius:4px;transition:width 0.5s}
-.gauge-val{font-size:9pt;color:#aaa;min-width:28px;text-align:right}
-.pt-row{display:flex;justify-content:center;align-items:center;gap:6px;margin:10px 0}
+.gauge-val{font-size:9pt;color:#aaa;min-width:48px;text-align:right}
+.pt-row{display:flex;justify-content:center;align-items:center;gap:6px;margin:10px 0;position:relative}
 .pt-badge{background:#fff0f0;color:#c0392b;font-size:14pt;font-weight:700;padding:4px 16px;border-radius:20px}
 .pt-label{font-size:9pt;color:#aaa}
-.action-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.action-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;position:relative}
 .action-btn{padding:10px;border-radius:8px;border:1.5px solid #e0d0cc;background:white;font-size:10pt;font-weight:700;cursor:pointer;color:#1a1a2e;transition:all 0.15s}
 .action-btn:hover{background:#fff0f0;border-color:#c0392b}
-.action-btn:disabled{opacity:0.4;cursor:not-allowed}
-
-/* メッセージ */
-.msg-box{background:#fffaf8;border:1.5px solid #e0d0cc;border-radius:8px;padding:8px 12px;font-size:10pt;color:#555;margin-top:8px;min-height:32px;text-align:center}
-
+.msg-box{background:#fffaf8;border:1.5px solid #e0d0cc;border-radius:8px;padding:8px 12px;font-size:10pt;color:#555;margin-top:8px;min-height:32px;text-align:center;position:relative}
 /* ショップ */
 .shop-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .shop-title{font-size:14pt;font-weight:700;color:#1a1a2e}
 .shop-pt{font-size:12pt;font-weight:700;color:#c0392b}
-.item-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.shop-cat{font-size:9pt;font-weight:700;color:#888;letter-spacing:0.1em;margin:14px 0 8px}
+.item-list{display:flex;flex-direction:column;gap:8px}
 .item{display:flex;align-items:center;gap:10px;background:white;border-radius:12px;padding:10px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.item.equipped{border:2px solid #27ae60}
 .item-icon{font-size:28px;min-width:36px;text-align:center}
 .item-info{flex:1}
 .item-name{font-size:11pt;font-weight:700;color:#1a1a2e}
 .item-desc{font-size:9pt;color:#aaa}
 .item-count{font-size:9pt;color:#888;margin-top:2px}
-.buy-btn{background:#c0392b;color:white;border:none;padding:6px 12px;border-radius:8px;font-size:10pt;font-weight:700;cursor:pointer;min-width:52px}
+.btn-col{display:flex;flex-direction:column;gap:4px}
+.buy-btn{background:#c0392b;color:white;border:none;padding:6px 12px;border-radius:8px;font-size:10pt;font-weight:700;cursor:pointer;min-width:60px}
 .buy-btn:disabled{opacity:0.4;cursor:not-allowed}
-.use-btn{background:#27ae60;color:white;border:none;padding:6px 12px;border-radius:8px;font-size:10pt;font-weight:700;cursor:pointer;min-width:52px}
-.use-btn:disabled{opacity:0.4;cursor:not-allowed}
-
+.use-btn{background:#27ae60;color:white;border:none;padding:6px 12px;border-radius:8px;font-size:10pt;font-weight:700;cursor:pointer;min-width:60px}
+.equip-btn{background:#2980b9;color:white;border:none;padding:6px 12px;border-radius:8px;font-size:10pt;font-weight:700;cursor:pointer;min-width:60px}
+.equipped-label{font-size:8pt;color:#27ae60;font-weight:700;text-align:center}
 /* 進化チャート */
 .evo-title{font-size:12pt;font-weight:700;color:#1a1a2e;margin-bottom:10px}
 .evo-route{background:white;border-radius:12px;padding:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:8px}
-.evo-route-name{font-size:10pt;font-weight:700;color:#c0392b;margin-bottom:6px}
-.evo-stages{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.evo-stage{text-align:center}
-.evo-emoji{font-size:24px}
-.evo-sname{font-size:8pt;color:#aaa;margin-top:2px}
-.evo-arrow{color:#aaa;font-size:12pt}
+.evo-route.current{border:2px solid #c0392b}
+.evo-route-name{font-size:10pt;font-weight:700;color:#c0392b;margin-bottom:8px}
+.evo-stages{display:flex;align-items:center;gap:3px;flex-wrap:wrap}
+.evo-stage{text-align:center;opacity:0.4}
+.evo-stage.reached{opacity:1}
+.evo-stage.now{opacity:1;transform:scale(1.15)}
+.evo-emoji{font-size:20px}
+.evo-sname{font-size:7pt;color:#aaa;margin-top:1px;max-width:44px}
+.evo-arrow{color:#ddd;font-size:9pt}
 .evo-cond{font-size:9pt;color:#aaa;margin-top:6px;border-top:1px solid #f0e8e8;padding-top:6px}
-
-/* ポイント履歴 */
-.history-title{font-size:12pt;font-weight:700;color:#1a1a2e;margin-bottom:10px}
+.history-title{font-size:12pt;font-weight:700;color:#1a1a2e;margin:16px 0 10px}
 .history-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f0e8e8;font-size:10pt}
 .history-label{color:#555}
 .history-pt{color:#c0392b;font-weight:700}
@@ -86,9 +87,12 @@ body{font-family:'Noto Sans JP','IPAGothic',sans-serif;background:#f7f4ef;min-he
 <!-- 育成画面 -->
 <div class="screen active" id="petScreen">
   <div class="pet-card">
+    <div class="pet-bg" id="petBg"></div>
     <div class="owner-name" id="ownerName">カンカンのそだてっこ</div>
+    <div><span class="route-tag" id="routeTag" style="display:none"></span></div>
     <div class="pet-stage" id="petEmoji">🥚</div>
     <div class="pet-name" id="petName">タマゴ</div>
+    <div class="stage-badge" id="stageBadge">だい1だんかい / 8</div>
     <div class="pet-mood" id="petMood">もうすぐうまれそう...</div>
     <div class="gauge-wrap">
       <div class="gauge-row">
@@ -102,9 +106,9 @@ body{font-family:'Noto Sans JP','IPAGothic',sans-serif;background:#f7f4ef;min-he
         <div class="gauge-val" id="happyVal">70</div>
       </div>
       <div class="gauge-row">
-        <div class="gauge-label">⚡ けいけん</div>
+        <div class="gauge-label">⚡ つぎのしんか</div>
         <div class="gauge-bar"><div class="gauge-fill" id="expBar" style="background:#2980b9;width:20%"></div></div>
-        <div class="gauge-val" id="expVal">20</div>
+        <div class="gauge-val" id="expVal">0</div>
       </div>
     </div>
     <div class="pt-row">
@@ -125,108 +129,61 @@ body{font-family:'Noto Sans JP','IPAGothic',sans-serif;background:#f7f4ef;min-he
     <div class="shop-title">🛒 ショップ</div>
     <div class="shop-pt">⭐ <span id="shopPt">0</span>pt</div>
   </div>
-  <div class="item-list" id="itemList"></div>
+  <div id="shopBody"></div>
 </div>
 
-<!-- 進化・履歴画面 -->
+<!-- 進化画面 -->
 <div class="screen" id="evoScreen">
   <div class="evo-title">✨ しんかチャート</div>
-  <div class="evo-route">
-    <div class="evo-route-name">📚 ぶんごう系（漢字多め）</div>
-    <div class="evo-stages">
-      <div class="evo-stage"><div class="evo-emoji">🥚</div><div class="evo-sname">タマゴ</div></div>
-      <div class="evo-arrow">→</div>
-      <div class="evo-stage"><div class="evo-emoji">🐣</div><div class="evo-sname">ヒナ</div></div>
-      <div class="evo-arrow">→</div>
-      <div class="evo-stage"><div class="evo-emoji">📖</div><div class="evo-sname">よみびと</div></div>
-      <div class="evo-arrow">→</div>
-      <div class="evo-stage"><div class="evo-emoji">🏯</div><div class="evo-sname">ぶんごう</div></div>
-    </div>
-    <div class="evo-cond">条件：漢字ポイントが全体の40%以上</div>
-  </div>
-  <div class="evo-route">
-    <div class="evo-route-name">🔬 はかせ系（算数多め）</div>
-    <div class="evo-stages">
-      <div class="evo-stage"><div class="evo-emoji">🥚</div><div class="evo-sname">タマゴ</div></div>
-      <div class="evo-arrow">→</div>
-      <div class="evo-stage"><div class="evo-emoji">🐣</div><div class="evo-sname">ヒナ</div></div>
-      <div class="evo-arrow">→</div>
-      <div class="evo-stage"><div class="evo-emoji">🔭</div><div class="evo-sname">けんきゅうしゃ</div></div>
-      <div class="evo-arrow">→</div>
-      <div class="evo-stage"><div class="evo-emoji">🧙</div><div class="evo-sname">はかせ</div></div>
-    </div>
-    <div class="evo-cond">条件：算数ポイントが全体の40%以上</div>
-  </div>
-  <div class="evo-route">
-    <div class="evo-route-name">🌍 たびびと系（英語多め）</div>
-    <div class="evo-stages">
-      <div class="evo-stage"><div class="evo-emoji">🥚</div><div class="evo-sname">タマゴ</div></div>
-      <div class="evo-arrow">→</div>
-      <div class="evo-stage"><div class="evo-emoji">🐣</div><div class="evo-sname">ヒナ</div></div>
-      <div class="evo-arrow">→</div>
-      <div class="evo-stage"><div class="evo-emoji">✈️</div><div class="evo-sname">たびびと</div></div>
-      <div class="evo-arrow">→</div>
-      <div class="evo-stage"><div class="evo-emoji">👑</div><div class="evo-sname">せかいおう</div></div>
-    </div>
-    <div class="evo-cond">条件：英語ポイントが全体の40%以上</div>
-  </div>
-  <div class="evo-route">
-    <div class="evo-route-name">⚔️ ゆうしゃ系（バランス）</div>
-    <div class="evo-stages">
-      <div class="evo-stage"><div class="evo-emoji">🥚</div><div class="evo-sname">タマゴ</div></div>
-      <div class="evo-arrow">→</div>
-      <div class="evo-stage"><div class="evo-emoji">🐣</div><div class="evo-sname">ヒナ</div></div>
-      <div class="evo-arrow">→</div>
-      <div class="evo-stage"><div class="evo-emoji">🦸</div><div class="evo-sname">ゆうしゃ</div></div>
-      <div class="evo-arrow">→</div>
-      <div class="evo-stage"><div class="evo-emoji">🐉</div><div class="evo-sname">りゅうおう</div></div>
-    </div>
-    <div class="evo-cond">条件：どれか1科目が40%未満でバランスよく学習</div>
-  </div>
-
-  <div class="history-title" style="margin-top:16px">📊 ポイント履歴</div>
+  <div id="evoChart"></div>
+  <div class="history-title">📊 ポイント履歴</div>
   <div id="historyList"></div>
 </div>
 
+<script src="evolution.js"></script>
 <script>
-// URLパラメータからownerを取得
 const params = new URLSearchParams(location.search);
 const owner = params.get('owner') || 'kanka';
-const storageKey = 'pet_' + owner;
-
 document.getElementById('backBtn').href = owner === 'kanka' ? 'kanka/index.html' : 'hanano/index.html';
-document.getElementById('ownerName').textContent = owner === 'kanka' ? 'カンカンのそだてっこ' : '羽梛のそだてっこ';
+const childName = owner === 'kanka' ? 'カンカン' : '羽梛';
+document.getElementById('ownerName').textContent = childName + 'のそだてっこ';
 
-// データ構造
 const defaultData = {
-  pts: 0,
-  totalPts: 0,
-  hunger: 80,
-  happy: 70,
-  exp: 0,
-  stage: 0, // 0:たまご 1:ひな 2:中間 3:最終
-  route: '', // bungo/hakase/tabibito/yuusha
-  ptsByType: {kanji:0, math:0, english:0, romaji:0, social:0},
-  items: {apple:0, cake:0, magic:0, toy:0},
-  history: [],
-  lastUpdate: Date.now()
+  pts:0, totalPts:0, hunger:80, happy:70, exp:0, stage:0, route:'',
+  ptsByType:{kanji:0,math:0,english:0,romaji:0,social:0},
+  items:{apple:0,cake:0,magic:0,toy:0,sushi:0,star:0},
+  cosmetics:{}, equipped:{hat:'',bg:''},
+  history:[], lastUpdate:Date.now()
 };
 
-// ステージ定義
-const stages = {
-  bungo:   [{e:'🥚',n:'タマゴ'},{e:'🐣',n:'ヒナ'},{e:'📖',n:'よみびと'},{e:'🏯',n:'ぶんごう'}],
-  hakase:  [{e:'🥚',n:'タマゴ'},{e:'🐣',n:'ヒナ'},{e:'🔭',n:'けんきゅうしゃ'},{e:'🧙',n:'はかせ'}],
-  tabibito:[{e:'🥚',n:'タマゴ'},{e:'🐣',n:'ヒナ'},{e:'✈️',n:'たびびと'},{e:'👑',n:'せかいおう'}],
-  yuusha:  [{e:'🥚',n:'タマゴ'},{e:'🐣',n:'ヒナ'},{e:'🦸',n:'ゆうしゃ'},{e:'🐉',n:'りゅうおう'}],
-};
-
-// アイテム定義
-const itemDefs = [
+// えさ・アイテム
+const FOOD_ITEMS = [
   {id:'apple', name:'りんご', icon:'🍎', desc:'おなか+20', cost:10, effect:{hunger:20}},
   {id:'cake',  name:'ケーキ', icon:'🍰', desc:'おなか+30 きげん+20', cost:30, effect:{hunger:30,happy:20}},
-  {id:'magic', name:'まほうのくすり', icon:'✨', desc:'けいけん+30', cost:50, effect:{exp:30}},
+  {id:'sushi', name:'おすし', icon:'🍣', desc:'おなか+50 きげん+30', cost:60, effect:{hunger:50,happy:30}},
   {id:'toy',   name:'おもちゃ', icon:'🎯', desc:'きげん+40', cost:40, effect:{happy:40}},
+  {id:'magic', name:'まほうのくすり', icon:'✨', desc:'けいけん+15', cost:80, effect:{exp:15}},
+  {id:'star',  name:'きせきのスター', icon:'🌟', desc:'けいけん+40', cost:200, effect:{exp:40}},
 ];
+// 着せ替え（ぼうし）
+const HATS = [
+  {id:'crown', name:'おうかん', icon:'👑', cost:300},
+  {id:'cap', name:'キャップ', icon:'🧢', cost:120},
+  {id:'party', name:'パーティーぼうし', icon:'🎉', cost:150},
+  {id:'graduate', name:'はかせのぼうし', icon:'🎓', cost:250},
+];
+// 背景
+const BGS = [
+  {id:'sky', name:'あおぞら', icon:'☁️', cost:100},
+  {id:'night', name:'よぞら', icon:'🌙', cost:150},
+  {id:'sea', name:'うみ', icon:'🌊', cost:150},
+  {id:'forest', name:'もり', icon:'🌳', cost:120},
+  {id:'rainbow', name:'にじ', icon:'🌈', cost:300},
+];
+const BG_EMOJI = {sky:'☁️',night:'🌙',sea:'🌊',forest:'🌳',rainbow:'🌈'};
+
+let data = {...defaultData};
+let prevStage = 0;
 
 async function loadData(){
   try {
@@ -234,175 +191,221 @@ async function loadData(){
     let d = await res.json();
     if (typeof d === 'string') { try { d = JSON.parse(d); } catch(e2) {} }
     if (!d || typeof d !== 'object') return {...defaultData};
-    return {...defaultData, ...d};
-  } catch(e) {
-    return {...defaultData};
-  }
+    return {...defaultData, ...d, items:{...defaultData.items, ...(d.items||{})}, cosmetics:{...(d.cosmetics||{})}, equipped:{...defaultData.equipped, ...(d.equipped||{})}};
+  } catch(e) { return {...defaultData}; }
 }
-async function saveData(d){
+async function saveData(){
+  data.lastUpdate = Date.now();
   try {
     await fetch('/api/pet/' + owner, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(d)
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data)
     });
   } catch(e) {}
 }
 
-let data = {...defaultData};
-loadData().then(d => { data = d; updateUI(); });
-
-// 時間経過でゲージ減少
 function applyTimeDecay(){
   const now = Date.now();
-  const elapsed = Math.floor((now - data.lastUpdate) / 1000 / 60); // 分
+  const elapsed = Math.floor((now - data.lastUpdate)/1000/60);
   if(elapsed > 0){
-    data.hunger = Math.max(0, data.hunger - elapsed * 0.5);
-    data.happy = Math.max(0, data.happy - elapsed * 0.3);
-    data.lastUpdate = now;
-    saveData(data);
+    data.hunger = Math.max(0, data.hunger - elapsed*0.3);
+    data.happy = Math.max(0, data.happy - elapsed*0.2);
   }
 }
 
-// 進化チェック
-function checkEvolution(){
-  if(data.exp < 50) return;
-  const t = data.ptsByType;
-  const total = t.kanji + t.math + t.english + t.romaji || 1;
-  const ratios = {kanji:t.kanji/total, math:t.math/total, english:t.english/total};
-
-  if(data.stage === 0 && data.exp >= 30){
-    data.stage = 1;
-    data.route = '';
-    showMsg('🎉 タマゴがかえった！ヒナになったよ！');
-  } else if(data.stage === 1 && data.exp >= 100){
-    // ルート決定
-    if(ratios.kanji >= 0.4) data.route = 'bungo';
-    else if(ratios.math >= 0.4) data.route = 'hakase';
-    else if(ratios.english >= 0.4) data.route = 'tabibito';
-    else data.route = 'yuusha';
-    data.stage = 2;
-    const s = stages[data.route][2];
-    showMsg(`🌟 しんか！${s.n}になったよ！`);
-  } else if(data.stage === 2 && data.exp >= 300){
-    data.stage = 3;
-    const s = stages[data.route][3];
-    showMsg(`👑 さいこうしんか！${s.n}になったよ！`);
+// ルートを決める（stage2到達時に確定、未確定なら毎回再計算）
+function ensureRoute(){
+  const stage = calcStage(data.exp);
+  if(stage >= 2 && !data.route){
+    data.route = decideRoute(data.ptsByType);
   }
+}
+
+function checkEvolution(){
+  ensureRoute();
+  const newStage = calcStage(data.exp);
+  if(newStage > data.stage){
+    data.stage = newStage;
+    const route = data.route || 'yuusha';
+    const s = EVO_STAGES[route][newStage];
+    showMsg('🎉 しんか！「' + s.n + '」になったよ！');
+    triggerEvolveAnim();
+  } else {
+    data.stage = newStage;
+  }
+}
+
+function triggerEvolveAnim(){
+  const el = document.getElementById('petEmoji');
+  el.classList.remove('evolving');
+  void el.offsetWidth;
+  el.classList.add('evolving');
 }
 
 function getStageInfo(){
-  if(data.stage === 0) return {e:'🥚', n:'タマゴ'};
-  const route = data.route || 'yuusha';
-  return stages[route][data.stage] || stages.yuusha[data.stage];
+  const stage = calcStage(data.exp);
+  if(stage < 2 || !data.route) return EVO_STAGES.yuusha[stage]; // タマゴ・ヒナは共通
+  return EVO_STAGES[data.route][stage];
 }
 
 function getMood(){
-  const avg = (data.hunger + data.happy) / 2;
+  const avg = (data.hunger + data.happy)/2;
   if(avg >= 80) return 'とっても元気！😄';
-  if(avg >= 60) return '普通だよ😊';
-  if(avg >= 40) return 'ちょっとお腹すいた...😐';
-  if(avg >= 20) return 'お腹すいた！機嫌わるい😠';
-  return 'ひどい！もっと世話して！😢';
+  if(avg >= 60) return 'ごきげんだよ😊';
+  if(avg >= 40) return 'おなかすいたかも...😐';
+  if(avg >= 20) return 'おなかぺこぺこ😠';
+  return 'もっとおせわして！😢';
 }
 
 function updateUI(){
   applyTimeDecay();
   checkEvolution();
+
   const s = getStageInfo();
   document.getElementById('petEmoji').textContent = s.e;
   document.getElementById('petName').textContent = s.n;
+  document.getElementById('stageBadge').textContent = 'だい' + (data.stage+1) + 'だんかい / 8';
   document.getElementById('petMood').textContent = getMood();
+
+  // ルートタグ
+  const rt = document.getElementById('routeTag');
+  if(data.route && data.stage >= 2){
+    rt.style.display = 'inline-block';
+    rt.textContent = ROUTE_NAMES[data.route] + 'ルート';
+  } else { rt.style.display = 'none'; }
+
+  // 背景
+  const bg = document.getElementById('petBg');
+  bg.textContent = data.equipped.bg ? BG_EMOJI[data.equipped.bg] : '';
+
+  // ぼうし（絵文字の上に小さく表示）
+  const hatEmoji = data.equipped.hat ? (HATS.find(h=>h.id===data.equipped.hat)||{}).icon : '';
+  document.getElementById('petName').textContent = (hatEmoji ? hatEmoji+' ' : '') + s.n;
+
   document.getElementById('hungerBar').style.width = data.hunger + '%';
   document.getElementById('hungerVal').textContent = Math.floor(data.hunger);
   document.getElementById('happyBar').style.width = data.happy + '%';
   document.getElementById('happyVal').textContent = Math.floor(data.happy);
-  const expPct = Math.min(100, (data.exp % 100));
-  document.getElementById('expBar').style.width = expPct + '%';
-  document.getElementById('expVal').textContent = Math.floor(data.exp);
+
+  const info = nextStageInfo(data.exp);
+  document.getElementById('expBar').style.width = info.pct + '%';
+  document.getElementById('expVal').textContent = info.isMax ? 'MAX' : (info.current + '/' + info.need);
+
   document.getElementById('ptDisp').textContent = data.pts;
   document.getElementById('shopPt').textContent = data.pts;
-  renderItems();
+
+  renderShop();
+  renderEvoChart();
   renderHistory();
 }
 
-function showMsg(msg){
-  document.getElementById('msgBox').textContent = msg;
-}
+function showMsg(m){ document.getElementById('msgBox').textContent = m; }
 
 function feedPet(){
-  if(data.items.apple > 0){
-    data.items.apple--;
-    data.hunger = Math.min(100, data.hunger + 20);
-    showMsg('🍎 りんごをあげた！おなかいっぱい！');
-  } else if(data.items.cake > 0){
-    data.items.cake--;
-    data.hunger = Math.min(100, data.hunger + 30);
-    data.happy = Math.min(100, data.happy + 20);
-    showMsg('🍰 ケーキをあげた！おいしい！');
-  } else {
-    showMsg('えさがないよ！ショップで買ってね🛒');
-  }
-  saveData(data);
-  updateUI();
+  // 持っているえさを自動で使う（なければメッセージ）
+  const owned = FOOD_ITEMS.filter(f=>f.effect.hunger && (data.items[f.id]||0)>0);
+  if(owned.length === 0){ showMsg('えさがないよ！ショップでかってね🛒'); return; }
+  const f = owned[0];
+  useItem(f.id);
 }
-
 function playPet(){
-  if(data.items.toy > 0){
-    data.items.toy--;
-    data.happy = Math.min(100, data.happy + 40);
-    showMsg('🎯 おもちゃで遊んだ！楽しい！');
-  } else {
-    data.happy = Math.min(100, data.happy + 10);
-    showMsg('🎮 いっしょに遊んだ！きげんがよくなった！');
-  }
-  saveData(data);
-  updateUI();
+  if((data.items.toy||0) > 0){ useItem('toy'); }
+  else { data.happy = Math.min(100, data.happy+10); showMsg('🎮 いっしょにあそんだ！'); saveData(); updateUI(); }
 }
 
-function renderItems(){
-  const el = document.getElementById('itemList');
-  el.innerHTML = '';
-  itemDefs.forEach(item => {
-    const count = data.items[item.id] || 0;
-    const canBuy = data.pts >= item.cost;
-    const div = document.createElement('div');
-    div.className = 'item';
-    div.innerHTML = `
-      <div class="item-icon">${item.icon}</div>
-      <div class="item-info">
-        <div class="item-name">${item.name}</div>
-        <div class="item-desc">${item.desc}</div>
-        <div class="item-count">所持: ${count}個</div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px">
-        <button class="buy-btn" ${!canBuy?'disabled':''} onclick="buyItem('${item.id}',${item.cost})">${item.cost}pt</button>
-        ${count>0?`<button class="use-btn" onclick="useItem('${item.id}')">つかう</button>`:''}
-      </div>
-    `;
-    el.appendChild(div);
-  });
-}
-
-function buyItem(id, cost){
-  if(data.pts < cost) return;
+function buyItem(id, cost, kind){
+  if(data.pts < cost){ showMsg('ポイントがたりないよ💦'); return; }
   data.pts -= cost;
-  data.items[id] = (data.items[id] || 0) + 1;
-  saveData(data);
-  updateUI();
-  showMsg(`${itemDefs.find(i=>i.id===id).icon} かった！`);
+  if(kind === 'food'){ data.items[id] = (data.items[id]||0)+1; }
+  else { data.cosmetics[id] = true; }
+  saveData(); updateUI();
+  showMsg('かった！🎁');
+}
+function useItem(id){
+  const f = FOOD_ITEMS.find(x=>x.id===id);
+  if(!f || (data.items[id]||0)<=0) return;
+  data.items[id]--;
+  if(f.effect.hunger) data.hunger = Math.min(100, data.hunger+f.effect.hunger);
+  if(f.effect.happy) data.happy = Math.min(100, data.happy+f.effect.happy);
+  if(f.effect.exp){ data.exp += f.effect.exp; checkEvolution(); }
+  saveData(); updateUI();
+  showMsg(f.icon + ' ' + f.name + 'をつかった！');
+}
+function equip(slot, id){
+  if(data.equipped[slot] === id) data.equipped[slot] = '';
+  else data.equipped[slot] = id;
+  saveData(); updateUI();
 }
 
-function useItem(id){
-  const item = itemDefs.find(i=>i.id===id);
-  if(!item || !data.items[id]) return;
-  data.items[id]--;
-  if(item.effect.hunger) data.hunger = Math.min(100, data.hunger + item.effect.hunger);
-  if(item.effect.happy) data.happy = Math.min(100, data.happy + item.effect.happy);
-  if(item.effect.exp){ data.exp += item.effect.exp; checkEvolution(); }
-  saveData(data);
-  updateUI();
-  showMsg(`${item.icon} ${item.name}をつかった！`);
+function renderShop(){
+  let html = '';
+  // えさ
+  html += '<div class="shop-cat">🍙 えさ・アイテム</div><div class="item-list">';
+  FOOD_ITEMS.forEach(f=>{
+    const cnt = data.items[f.id]||0;
+    const canBuy = data.pts >= f.cost;
+    html += '<div class="item"><div class="item-icon">'+f.icon+'</div>'+
+      '<div class="item-info"><div class="item-name">'+f.name+'</div><div class="item-desc">'+f.desc+'</div>'+
+      '<div class="item-count">もってる：'+cnt+'こ</div></div>'+
+      '<div class="btn-col"><button class="buy-btn" '+(canBuy?'':'disabled')+' onclick="buyItem(\''+f.id+'\','+f.cost+',\'food\')">'+f.cost+'pt</button>'+
+      (cnt>0?'<button class="use-btn" onclick="useItem(\''+f.id+'\')">つかう</button>':'')+'</div></div>';
+  });
+  html += '</div>';
+  // ぼうし
+  html += '<div class="shop-cat">👑 きせかえ（ぼうし）</div><div class="item-list">';
+  HATS.forEach(h=>{
+    const owned = data.cosmetics[h.id];
+    const isEq = data.equipped.hat === h.id;
+    html += '<div class="item'+(isEq?' equipped':'')+'"><div class="item-icon">'+h.icon+'</div>'+
+      '<div class="item-info"><div class="item-name">'+h.name+'</div></div>'+
+      '<div class="btn-col">'+
+      (owned ? '<button class="equip-btn" onclick="equip(\'hat\',\''+h.id+'\')">'+(isEq?'はずす':'つける')+'</button>'
+             : '<button class="buy-btn" '+(data.pts>=h.cost?'':'disabled')+' onclick="buyItem(\''+h.id+'\','+h.cost+',\'cos\')">'+h.cost+'pt</button>')+
+      '</div></div>';
+  });
+  html += '</div>';
+  // 背景
+  html += '<div class="shop-cat">🖼️ きせかえ（はいけい）</div><div class="item-list">';
+  BGS.forEach(b=>{
+    const owned = data.cosmetics[b.id];
+    const isEq = data.equipped.bg === b.id;
+    html += '<div class="item'+(isEq?' equipped':'')+'"><div class="item-icon">'+b.icon+'</div>'+
+      '<div class="item-info"><div class="item-name">'+b.name+'</div></div>'+
+      '<div class="btn-col">'+
+      (owned ? '<button class="equip-btn" onclick="equip(\'bg\',\''+b.id+'\')">'+(isEq?'はずす':'つける')+'</button>'
+             : '<button class="buy-btn" '+(data.pts>=b.cost?'':'disabled')+' onclick="buyItem(\''+b.id+'\','+b.cost+',\'cos\')">'+b.cost+'pt</button>')+
+      '</div></div>';
+  });
+  html += '</div>';
+  document.getElementById('shopBody').innerHTML = html;
+}
+
+function renderEvoChart(){
+  const myRoute = (data.stage >= 2 && data.route) ? data.route : null;
+  const routeOrder = ['bungo','hakase','tabibito','tanken','madoshi','yuusha'];
+  const routeLabel = {
+    bungo:'📖 ぶんごう系（漢字）', hakase:'🔬 はかせ系（算数）',
+    tabibito:'🌍 せかいおう系（英語）', tanken:'🗺️ たんけん系（社会）',
+    madoshi:'🔮 まどうし系（ローマ字）', yuusha:'⚔️ ゆうしゃ系（バランス）'
+  };
+  let html = '';
+  routeOrder.forEach(rk=>{
+    const isCurrent = rk === myRoute;
+    const st = EVO_STAGES[rk];
+    let stagesHtml = '';
+    st.forEach((s, i)=>{
+      let cls = 'evo-stage';
+      if(isCurrent){
+        if(i === data.stage) cls += ' now';
+        else if(i < data.stage) cls += ' reached';
+      } else if(i < 2 && data.stage >= i){ cls += ' reached'; }
+      stagesHtml += '<div class="'+cls+'"><div class="evo-emoji">'+s.e+'</div><div class="evo-sname">'+s.n+'</div></div>';
+      if(i < st.length-1) stagesHtml += '<div class="evo-arrow">→</div>';
+    });
+    html += '<div class="evo-route'+(isCurrent?' current':'')+'">'+
+      '<div class="evo-route-name">'+routeLabel[rk]+(isCurrent?' ← いまここ':'')+'</div>'+
+      '<div class="evo-stages">'+stagesHtml+'</div></div>';
+  });
+  document.getElementById('evoChart').innerHTML = html;
 }
 
 function renderHistory(){
@@ -411,8 +414,8 @@ function renderHistory(){
     el.innerHTML = '<div style="font-size:10pt;color:#aaa;text-align:center;padding:8px">まだ記録がないよ</div>';
     return;
   }
-  el.innerHTML = data.history.slice(-10).reverse().map(h =>
-    `<div class="history-item"><span class="history-label">${h.label}</span><span class="history-pt">+${h.pt}pt</span></div>`
+  el.innerHTML = data.history.slice(-12).reverse().map(h=>
+    '<div class="history-item"><span class="history-label">'+h.label+'</span><span class="history-pt">+'+h.pt+'pt</span></div>'
   ).join('');
 }
 
@@ -424,23 +427,12 @@ function showTab(tab){
   updateUI();
 }
 
-// 外部からポイントを受け取る関数（グローバル）
-window.addPetPoints = function(pt, type, label){
-  data = loadData();
-  data.pts += pt;
-  data.totalPts += pt;
-  data.exp += Math.floor(pt * 0.3);
-  if(data.ptsByType[type] !== undefined) data.ptsByType[type] += pt;
-  data.history = data.history || [];
-  data.history.push({label, pt, time: Date.now()});
-  if(data.history.length > 50) data.history = data.history.slice(-50);
-  checkEvolution();
-  saveData(data);
-};
+setInterval(()=>{ saveData(); updateUI(); }, 60000);
 
-// 定期更新
-setInterval(updateUI, 60000);
-updateUI();
+(async function init(){
+  data = await loadData();
+  updateUI();
+})();
 </script>
 </body>
 </html>
