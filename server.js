@@ -465,9 +465,21 @@ app.get('/api/pet/:owner/setpts', async (req, res) => {
     data.totalPts = pts;
     if (!data.ptsByType) data.ptsByType = {kanji:0,math:0,english:0,romaji:0,social:0};
     data.ptsByType[type] = pts;
+    var msg = 'ポイントを ' + pts + 'pt（' + type + '）';
+    if (req.query.exp !== undefined) {
+      const expv = parseInt(req.query.exp, 10);
+      if (!isNaN(expv)) {
+        data.exp = expv;
+        const TH = [0,20,60,130,230,360,480,600];
+        var st = 0;
+        for (var i=0;i<TH.length;i++){ if(expv>=TH[i]) st=i; }
+        data.stage = st;
+        msg += '、経験値を ' + expv + '（第' + (st+1) + '段階）';
+      }
+    }
     data.lastUpdate = Date.now();
     await kvSet('pet_' + owner, data);
-    res.send('OK: ' + owner + ' のポイントを ' + pts + 'pt（' + type + '）にセットしました。アプリに戻って確認してください。');
+    res.send('OK: ' + owner + ' の' + msg + 'にセットしました。アプリに戻って確認してください。');
   } catch (e) {
     res.status(500).send('error: ' + e.message);
   }
