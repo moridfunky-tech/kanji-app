@@ -37,6 +37,7 @@ h1{font-size:16pt;font-weight:700;color:#2980b9;margin-bottom:16px}
 .btn-retry{background:#2980b9;color:white;padding:12px 32px;border-radius:8px;border:none;font-size:12pt;font-weight:700;cursor:pointer;width:100%}
 </style>
 <script src="../pet_points.js"></script>
+<script src="../kanji_weeks.js"></script>
 </head>
 <body>
 <a class="back" href="kanji.html">← 戻る</a>
@@ -63,7 +64,7 @@ h1{font-size:16pt;font-weight:700;color:#2980b9;margin-bottom:16px}
   <button class="btn-retry" onclick="retry()">もういちど</button>
 </div>
 <script>
-const allKanji = [
+let allKanji = [
   {k:'序',y:'じょ'},{k:'永',y:'えい'},{k:'版',y:'はん'},{k:'因',y:'いん'},{k:'居',y:'い'},
   {k:'易',y:'えき'},{k:'液',y:'えき'},{k:'益',y:'えき'},{k:'演',y:'えん'},{k:'往',y:'おう'},
   {k:'応',y:'おう'},{k:'恩',y:'おん'},{k:'仮',y:'かり'},{k:'価',y:'か'},{k:'可',y:'か'},
@@ -157,6 +158,13 @@ function retry(){
   init();
 }
 
+try{
+  if(typeof getCurrentWeek === 'function' && typeof getWeekKanjiList === 'function'){
+    const wk = getCurrentWeek();
+    const list = getWeekKanjiList('hanano', wk);
+    if(list && list.length) allKanji = list;
+  }
+}catch(e){}
 init();
 </script>
 </body>
