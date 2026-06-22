@@ -22,6 +22,33 @@ const KANJI_WEEKS = {
       {q:'お',b:'あたた',a:'かい春。',ans:'温'},
       {q:'先生に',b:'と',a:'う。',ans:'問'},
     ],
+    12: [
+      {q:'先生が',b:'し',a:'を読んだ。',ans:'詩'},
+      {q:'木の',b:'は',a:'がおちる。',ans:'葉'},
+      {q:'王',b:'さま',a:'のおはなし。',ans:'様'},
+      {q:'体を',b:'うご',a:'かす。',ans:'動'},
+      {q:'前へ',b:'すす',a:'む。',ans:'進'},
+      {q:'',b:'ふか',a:'い川。',ans:'深'},
+      {q:'山に',b:'のぼ',a:'る。',ans:'登'},
+      {q:'買い',b:'もの',a:'をする。',ans:'物'},
+      {q:'かさを',b:'も',a:'つ。',ans:'持'},
+      {q:'',b:'たび',a:'に出る。',ans:'旅'},
+      {q:'ゲームを',b:'はじ',a:'める。',ans:'始'},
+      {q:'服を',b:'き',a:'る。',ans:'着'},
+      {q:'ピアノを',b:'なら',a:'う。',ans:'習'},
+      {q:'花を',b:'そだ',a:'てる。',ans:'育'},
+      {q:'公園で',b:'あそ',a:'ぶ。',ans:'遊'},
+      {q:'本を',b:'よ',a:'む。',ans:'読'},
+      {q:'みずを',b:'の',a:'む。',ans:'飲'},
+      {q:'',b:'やす',a:'いねだん。',ans:'安'},
+      {q:'へやが',b:'くら',a:'い。',ans:'暗'},
+      {q:'お',b:'あたた',a:'かいお茶。',ans:'温'},
+      {q:'にもつを',b:'はこ',a:'ぶ。',ans:'運'},
+      {q:'プールで',b:'およ',a:'ぐ。',ans:'泳'},
+      {q:'',b:'いそ',a:'いで走る。',ans:'急'},
+      {q:'',b:'くる',a:'しい。',ans:'苦'},
+      {q:'みちを',b:'む',a:'く。',ans:'向'},
+    ],
   },
   hanano: { // 5年生
     1: [
@@ -57,4 +84,13 @@ function getCurrentWeek(){
 function getWeekKanji(owner, week){
   const data = KANJI_WEEKS[owner] || KANJI_WEEKS.kanka;
   return data[week] || data[1];
+}
+
+// 読みクイズ・書きクイズ用：今週の漢字を {k:漢字, y:よみ} 形式で返す
+function getWeekKanjiList(owner, week){
+  const data = getWeekKanji(owner, week);
+  return data.map(function(item){
+    // bは送り仮名なしのよみ、ansが漢字。よみは送り仮名を除いた形
+    return { k: item.ans, y: item.b };
+  });
 }

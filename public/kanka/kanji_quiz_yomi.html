@@ -84,6 +84,7 @@ h1{font-size:16pt;font-weight:700;color:#c0392b;margin-bottom:16px}
 }
 </style>
 <script src="../pet_points.js"></script>
+<script src="../kanji_weeks.js"></script>
 </head>
 <body>
 <a class="back" href="quiz.html">← 戻る</a>
@@ -113,7 +114,7 @@ h1{font-size:16pt;font-weight:700;color:#c0392b;margin-bottom:16px}
 </div>
 
 <script>
-const allKanji = [
+let allKanji = [
   {k:'悪',y:'わるい'},{k:'安',y:'やすい'},{k:'暗',y:'くらい'},{k:'医',y:'い'},{k:'委',y:'い'},
   {k:'育',y:'そだてる'},{k:'員',y:'いん'},{k:'院',y:'いん'},{k:'飲',y:'のむ'},{k:'運',y:'はこぶ'},
   {k:'泳',y:'およぐ'},{k:'駅',y:'えき'},{k:'央',y:'まんなか'},{k:'横',y:'よこ'},{k:'屋',y:'や'},
@@ -232,6 +233,13 @@ function retry(){
   init();
 }
 
+try{
+  if(typeof getCurrentWeek === 'function' && typeof getWeekKanjiList === 'function'){
+    const wk = getCurrentWeek();
+    const list = getWeekKanjiList('kanka', wk);
+    if(list && list.length) allKanji = list;
+  }
+}catch(e){}
 init();
 </script>
 </body>
