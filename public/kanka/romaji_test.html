@@ -118,7 +118,7 @@ canvas{position:absolute;inset:0;width:100%;height:100%}
 </div>
 
 <script>
-const questions = [
+let questions = [
   {kana:'あ',ans:'a'},{kana:'い',ans:'i'},{kana:'う',ans:'u'},{kana:'え',ans:'e'},{kana:'お',ans:'o'},
   {kana:'か',ans:'ka'},{kana:'き',ans:'ki'},{kana:'く',ans:'ku'},{kana:'け',ans:'ke'},{kana:'こ',ans:'ko'},
   {kana:'さ',ans:'sa'},{kana:'し',ans:'si'},{kana:'す',ans:'su'},{kana:'せ',ans:'se'},{kana:'そ',ans:'so'},
@@ -130,6 +130,7 @@ const questions = [
   {kana:'ら',ans:'ra'},{kana:'り',ans:'ri'},{kana:'る',ans:'ru'},{kana:'れ',ans:'re'},{kana:'ろ',ans:'ro'},
   {kana:'わ',ans:'wa'},{kana:'を',ans:'wo'},
 ];
+questions = questions.sort(function(){ return Math.random() - 0.5; });
 
 let current = 0;
 let score = 0;
