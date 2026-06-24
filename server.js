@@ -485,4 +485,59 @@ app.get('/api/pet/:owner/setpts', async (req, res) => {
   }
 });
 
+// ファミリーメッセージ
+app.get('/api/messages/:owner', async (req, res) => {
+  try {
+    const owner = req.params.owner === 'hanano' ? 'hanano' : 'kanka';
+    var msgs = await kvGet('messages_' + owner);
+    if (!Array.isArray(msgs)) msgs = [];
+    res.json(msgs);
+  } catch (e) { res.json([]); }
+});
+
+app.post('/api/messages/:owner', async (req, res) => {
+  try {
+    const owner = req.params.owner === 'hanano' ? 'hanano' : 'kanka';
+    const from = req.body.from === 'parent' ? 'parent' : 'child';
+    const text = String(req.body.text || '').slice(0, 200);
+    const name = String(req.body.name || (from === 'parent' ? 'おうちのひと' : '')).slice(0, 20);
+    if (!text.trim()) { res.status(400).json({ error: 'empty' }); return; }
+    var msgs = await kvGet('messages_' + owner);
+    if (!Array.isArray(msgs)) msgs = [];
+    msgs.push({ from: from, name: name, text: text, ts: Date.now(), read: false });
+    if (msgs.length > 100) msgs = msgs.slice(-100);
+    await kvSet('messages_' + owner, msgs);
+    if (from === 'child') {
+      const childName = owner === 'kanka' ? 'カンカン' : '羽梛';
+      await lineBroadcast([{ type:'text', text: '💬 ' + childName + 'からメッセージ\n「' + text + '」' }]);
+    }
+    res.json({ success: true });
+  } catch (e) { console.error('msg error:', e.message); res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/messages/:owner/read', async (req, res) => {
+  try {
+    const owner = req.params.owner === 'hanano' ? 'hanano' : 'kanka';
+    const reader = req.body.reader === 'parent' ? 'parent' : 'child';
+    var msgs = await kvGet('messages_' + owner);
+    if (!Array.isArray(msgs)) msgs = [];
+    const targetFrom = reader === 'child' ? 'parent' : 'child';
+    msgs.forEach(function(m){ if (m.from === targetFrom) m.read = true; });
+    await kvSet('messages_' + owner, msgs);
+    res.json({ success: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/messages/:owner/unread', async (req, res) => {
+  try {
+    const owner = req.params.owner === 'hanano' ? 'hanano' : 'kanka';
+    const reader = req.query.reader === 'parent' ? 'parent' : 'child';
+    var msgs = await kvGet('messages_' + owner);
+    if (!Array.isArray(msgs)) msgs = [];
+    const targetFrom = reader === 'child' ? 'parent' : 'child';
+    const count = msgs.filter(function(m){ return m.from === targetFrom && !m.read; }).length;
+    res.json({ unread: count });
+  } catch (e) { res.json({ unread: 0 }); }
+});
+
 app.listen(3000, function(){ console.log('server running'); });
