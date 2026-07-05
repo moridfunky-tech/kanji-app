@@ -130,7 +130,7 @@ async function gradeAll(){
         body:JSON.stringify({imageData:img,answer:q.ans,question:q.q+q.b+q.a})
       });
       const d=await res.json();
-      allResults.push({question:q.q+'【'+q.b+'】'+q.a,answer:q.ans,correct:d.correct});
+      allResults.push({question:q.q+'【'+q.b+'】'+q.a,answer:q.ans,correct:d.correct,q:q.q,b:q.b,a:q.a,ans:q.ans});
       if(d.correct){
         r.className='res ok';r.textContent='⭕ 正解！';
         document.getElementById('c'+i).className='card ok';
@@ -141,13 +141,18 @@ async function gradeAll(){
       }
     }catch(e){
       r.className='res ng';r.textContent='エラー';
-      allResults.push({question:q.q+'【'+q.b+'】'+q.a,answer:q.ans,correct:false});
+      allResults.push({question:q.q+'【'+q.b+'】'+q.a,answer:q.ans,correct:false,q:q.q,b:q.b,a:q.a,ans:q.ans});
     }
   }
   const score=allResults.filter(r=>r.correct).length;
   document.getElementById('sv').textContent=score;
   fetch('/api/activity/kanka',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'test'})}).catch(function(){});
   sendToLine(score, allResults);
+  // 間違えた漢字を繰り越し保存
+  try{
+    const wrongList = allResults.filter(function(r){return !r.correct;}).map(function(r){return {q:r.q,b:r.b,a:r.a,ans:r.ans};});
+    fetch('/api/carryover/kanka',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wrong:wrongList})}).catch(function(){});
+  }catch(e){}
   btn.textContent='もう一度採点する';btn.disabled=false;
   const today=new Date().toLocaleDateString('ja-JP');
   try{

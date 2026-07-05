@@ -90,7 +90,8 @@ function strokeSvgs(paths){
 function makeCard(item, paths){
   const ex = item.q + '<span class="hl">【'+item.b+'】</span>' + item.a;
   const kakuNum = paths.length;
-  return '<div class="kcard"><div class="kcard-top"><div class="kchar">'+item.ans+'</div>'+
+  const badge = item._carry ? '<div style="background:#e67e22;color:white;font-size:6.5pt;font-weight:700;padding:1px 0;text-align:center">⚠️ ふくしゅう</div>' : '';
+  return '<div class="kcard"'+(item._carry?' style="border:2px solid #e67e22"':'')+'>'+badge+'<div class="kcard-top"><div class="kchar">'+item.ans+'</div>'+
     '<div class="kyomi">'+item.b+' '+kakuNum+'画</div></div>'+
     '<div class="kcard-stroke"><div class="slbl">◀ 書き順（'+kakuNum+'画）</div>'+
     '<div class="srow">'+strokeSvgs(paths)+'</div></div>'+
@@ -106,11 +107,21 @@ function makeCard(item, paths){
 
 async function build(){
   const week = (typeof getCurrentWeek==='function') ? getCurrentWeek() : 1;
-  const items = (typeof getWeekKanji==='function') ? getWeekKanji(OWNER, week) : [];
+  let items = (typeof getWeekKanji==='function') ? getWeekKanji(OWNER, week) : [];
   if(!items || !items.length){
     document.getElementById('content').innerHTML='<div class="loading">データがありません</div>';
     return;
   }
+  // 繰り越し（前週の間違い）を先頭に追加
+  let carry=[];
+  try{
+    const cres=await fetch('/api/carryover/'+OWNER);
+    carry=await cres.json();
+    if(!Array.isArray(carry)) carry=[];
+  }catch(e){ carry=[]; }
+  carry.forEach(function(x){ x._carry=true; });
+  const carrySet={}; carry.forEach(function(x){ carrySet[x.ans]=true; });
+  items = carry.concat(items.filter(function(x){ return !carrySet[x.ans]; }));
   const days=['月曜日','火曜日','水曜日','木曜日','金曜日'];
   const paths = await Promise.all(items.slice(0,25).map(it=>getStrokePaths(it.ans)));
   let html='';

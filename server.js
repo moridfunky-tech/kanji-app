@@ -540,4 +540,28 @@ app.get('/api/messages/:owner/unread', async (req, res) => {
   } catch (e) { res.json({ unread: 0 }); }
 });
 
+// 繰り越し（間違えた漢字）
+app.get('/api/carryover/:owner', async (req, res) => {
+  try {
+    const owner = req.params.owner === 'hanano' ? 'hanano' : 'kanka';
+    var w = await kvGet('carryover_' + owner);
+    if (!Array.isArray(w)) w = [];
+    res.json(w);
+  } catch (e) { res.json([]); }
+});
+
+app.post('/api/carryover/:owner', async (req, res) => {
+  try {
+    const owner = req.params.owner === 'hanano' ? 'hanano' : 'kanka';
+    var wrong = req.body.wrong;
+    if (!Array.isArray(wrong)) wrong = [];
+    // 各要素 {q,b,a,ans} のみ許可、最大20件
+    wrong = wrong.filter(function(x){ return x && x.ans; }).map(function(x){
+      return { q: String(x.q||''), b: String(x.b||''), a: String(x.a||''), ans: String(x.ans) };
+    }).slice(0, 20);
+    await kvSet('carryover_' + owner, wrong);
+    res.json({ success: true, count: wrong.length });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.listen(3000, function(){ console.log('server running'); });
