@@ -92,7 +92,7 @@ body{font-family:'Noto Sans JP','IPAGothic',sans-serif;background:#f7f4ef;min-he
     <div><span class="route-tag" id="routeTag" style="display:none"></span></div>
     <div class="pet-stage" id="petEmoji">🥚</div>
     <div class="pet-name" id="petName">タマゴ</div>
-    <div class="stage-badge" id="stageBadge">だい1だんかい / 8</div>
+    <div class="stage-badge" id="stageBadge">だい1だんかい / 10</div>
     <div class="pet-mood" id="petMood">もうすぐうまれそう...</div>
     <div class="gauge-wrap">
       <div class="gauge-row">
@@ -273,7 +273,7 @@ function updateUI(){
   const s = getStageInfo();
   document.getElementById('petEmoji').textContent = s.e;
   document.getElementById('petName').textContent = s.n;
-  document.getElementById('stageBadge').textContent = 'だい' + (data.stage+1) + 'だんかい / 8';
+  document.getElementById('stageBadge').textContent = 'だい' + (data.stage+1) + 'だんかい / 10';
   document.getElementById('petMood').textContent = getMood();
 
   // ルートタグ
