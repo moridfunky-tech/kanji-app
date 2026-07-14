@@ -6,23 +6,26 @@
 <title>3年生 漢字練習</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'IPAGothic','Noto Sans JP',sans-serif;background:#ddd}
+body{font-family:'IPAGothic','Noto Sans JP',sans-serif;background:#ddd;overflow-x:hidden}
 @page{size:A4 landscape;margin:8mm}
 @media print{
-  body{background:white}
+  body{background:white;overflow-x:visible}
   .done-bar,.back-bar{display:none !important}
-  .page{page-break-after:always;box-shadow:none;margin:0}
+  .page{width:277mm;max-width:277mm;padding:6mm 7mm;page-break-after:always;box-shadow:none;margin:0}
 }
-.back-bar{max-width:277mm;margin:10px auto 0;padding:0 7mm}
+.back-bar{max-width:1100px;margin:10px auto 0;padding:0 7mm}
 .back-bar a{color:#c0392b;text-decoration:none;font-size:12pt;font-weight:700}
 .loading{text-align:center;padding:60px;font-size:14pt;color:#c0392b}
-.page{width:277mm;padding:6mm 7mm;background:white;margin:0 auto 12px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.page{width:100%;max-width:1100px;padding:12px;background:white;margin:0 auto 12px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
 .page-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
 .hdr-left{font-size:7pt;color:#888}
 .hdr-day{font-size:13pt;font-weight:700;color:#c0392b;border:1.5px solid #c0392b;padding:1px 18px;border-radius:3px}
 .hdr-right{font-size:8.5pt;color:#555;border:1px solid #bbb;padding:1px 8px;border-radius:3px}
 .hdr-line{border-top:2px solid #c0392b;margin-bottom:5px}
 .grid5{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+@media screen and (max-width:900px){ .grid5{grid-template-columns:repeat(3,1fr)} }
+@media screen and (max-width:600px){ .grid5{grid-template-columns:repeat(2,1fr)} .kchar{font-size:28pt} }
+@media print{ .grid5{grid-template-columns:repeat(5,1fr) !important} }
 .kcard{border:1px solid #c8c0b8;border-radius:3px;display:flex;flex-direction:column;overflow:hidden}
 .kcard-top{text-align:center;background:white;border-bottom:1px solid #ddd;padding:3px 2px 2px;color:#1a1a2e}
 .kchar{font-size:34pt;color:#1a1a2e;font-weight:700;line-height:1;font-family:serif}
@@ -40,7 +43,7 @@ body{font-family:'IPAGothic','Noto Sans JP',sans-serif;background:#ddd}
 .pbox::after{content:'';position:absolute;top:50%;left:0;right:0;border-top:0.5px dashed #ddd}
 .pbox::before{content:'';position:absolute;left:50%;top:0;bottom:0;border-left:0.5px dashed #ddd}
 .pbox-ghost{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:48pt;color:rgba(0,0,0,0.08);font-weight:700;white-space:nowrap;font-family:serif}
-.done-bar{max-width:277mm;margin:0 auto 20px;padding:0 7mm;text-align:center}
+.done-bar{max-width:1100px;margin:0 auto 20px;padding:0 7mm;text-align:center}
 .done-btn{background:#27ae60;color:white;border:none;padding:12px 32px;border-radius:24px;font-size:13pt;font-weight:700;cursor:pointer;font-family:inherit}
 .done-btn:disabled{background:#95a5a6}
 </style>
