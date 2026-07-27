@@ -165,13 +165,14 @@ function initHandwriting(){
     clr.addEventListener('click',function(e){e.stopPropagation();var cc=cvs[id];if(cc)cc.ctx.clearRect(0,0,cc.cv.width,cc.cv.height);});
     pbox.appendChild(clr);
     var ctx=cv.getContext('2d');
-    ctx.strokeStyle='#1a1a2e'; ctx.lineWidth=7; ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.strokeStyle='#1a1a2e'; ctx.fillStyle='#1a1a2e'; ctx.lineWidth=7; ctx.lineCap='round'; ctx.lineJoin='round';
     cvs[id]={cv:cv,ctx:ctx};
     var drawing=false;
     function getPos(e){var r=cv.getBoundingClientRect();var sx=cv.width/r.width,sy=cv.height/r.height;return {x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sy};}
-    function startDraw(x,y){drawing=true;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+0.1,y+0.1);ctx.stroke();}
-    function moveDraw(x,y){if(!drawing)return;ctx.lineTo(x,y);ctx.stroke();}
-    function endDraw(){drawing=false;}
+    var lastX=0,lastY=0,midX=0,midY=0;
+    function startDraw(x,y){drawing=true;lastX=x;lastY=y;midX=x;midY=y;ctx.beginPath();ctx.arc(x,y,ctx.lineWidth/2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.moveTo(x,y);}
+    function moveDraw(x,y){if(!drawing)return;var mx=(lastX+x)/2,my=(lastY+y)/2;ctx.quadraticCurveTo(lastX,lastY,mx,my);ctx.stroke();ctx.beginPath();ctx.moveTo(mx,my);lastX=x;lastY=y;}
+    function endDraw(){if(!drawing)return;ctx.lineTo(lastX,lastY);ctx.stroke();drawing=false;}
     // Pointer Events（ペン・指・マウス統一）
     if(window.PointerEvent){
       cv.addEventListener('pointerdown',function(e){var p=getPos(e);startDraw(p.x,p.y);try{cv.setPointerCapture(e.pointerId);}catch(_){}});
