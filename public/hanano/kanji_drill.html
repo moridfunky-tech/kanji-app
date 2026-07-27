@@ -164,23 +164,25 @@ function initHandwriting(){
     clr.addEventListener('click',function(e){e.stopPropagation();var cc=cvs[id];if(cc)cc.ctx.clearRect(0,0,cc.cv.width,cc.cv.height);});
     pbox.appendChild(clr);
     var ctx=cv.getContext('2d');
-    ctx.strokeStyle='#1a1a2e'; ctx.lineWidth=8; ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.strokeStyle='#1a1a2e'; ctx.lineWidth=7; ctx.lineCap='round'; ctx.lineJoin='round';
     cvs[id]={cv:cv,ctx:ctx};
     var drawing=false;
     function getPos(e){var r=cv.getBoundingClientRect();var sx=cv.width/r.width,sy=cv.height/r.height;return {x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sy};}
-    function startDraw(x,y){drawing=true;ctx.beginPath();ctx.moveTo(x,y);}
+    function startDraw(x,y){drawing=true;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+0.1,y+0.1);ctx.stroke();}
     function moveDraw(x,y){if(!drawing)return;ctx.lineTo(x,y);ctx.stroke();}
     function endDraw(){drawing=false;}
     // Pointer Events（ペン・指・マウス統一）
     if(window.PointerEvent){
       cv.addEventListener('pointerdown',function(e){var p=getPos(e);startDraw(p.x,p.y);try{cv.setPointerCapture(e.pointerId);}catch(_){}});
-      cv.addEventListener('pointermove',function(e){if(!drawing)return;e.preventDefault();var p=getPos(e);moveDraw(p.x,p.y);});
+      cv.addEventListener('pointermove',function(e){if(!drawing)return;e.preventDefault();
+        var evs = (e.getCoalescedEvents && e.getCoalescedEvents().length) ? e.getCoalescedEvents() : [e];
+        for(var k=0;k<evs.length;k++){var p=getPos(evs[k]);moveDraw(p.x,p.y);}});
       cv.addEventListener('pointerup',endDraw);
       cv.addEventListener('pointercancel',endDraw);
     }
     // Touch（Pointer非対応環境・一部ペンの保険）
     cv.addEventListener('touchstart',function(e){var t=e.touches[0];var p=getPos(t);startDraw(p.x,p.y);},{passive:true});
-    cv.addEventListener('touchmove',function(e){if(!drawing)return;e.preventDefault();var t=e.touches[0];var p=getPos(t);moveDraw(p.x,p.y);},{passive:false});
+    cv.addEventListener('touchmove',function(e){if(!drawing)return;e.preventDefault();for(var k=0;k<e.touches.length;k++){var p=getPos(e.touches[k]);moveDraw(p.x,p.y);}},{passive:false});
     cv.addEventListener('touchend',endDraw);
     // Mouse（PC保険）
     cv.addEventListener('mousedown',function(e){var p=getPos(e);startDraw(p.x,p.y);});
