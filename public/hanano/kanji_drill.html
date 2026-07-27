@@ -168,12 +168,25 @@ function initHandwriting(){
     cvs[id]={cv:cv,ctx:ctx};
     var drawing=false;
     function getPos(e){var r=cv.getBoundingClientRect();var sx=cv.width/r.width,sy=cv.height/r.height;return {x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sy};}
-    cv.addEventListener('pointerdown',function(e){e.preventDefault();drawing=true;try{cv.setPointerCapture(e.pointerId);}catch(_){}
-      var p=getPos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);});
-    cv.addEventListener('pointermove',function(e){if(!drawing)return;e.preventDefault();var p=getPos(e);ctx.lineTo(p.x,p.y);ctx.stroke();});
-    cv.addEventListener('pointerup',function(e){drawing=false;try{cv.releasePointerCapture(e.pointerId);}catch(_){}});
-    cv.addEventListener('pointercancel',function(){drawing=false;});
-    cv.addEventListener('pointerleave',function(){drawing=false;});
+    function startDraw(x,y){drawing=true;ctx.beginPath();ctx.moveTo(x,y);}
+    function moveDraw(x,y){if(!drawing)return;ctx.lineTo(x,y);ctx.stroke();}
+    function endDraw(){drawing=false;}
+    // Pointer Events（ペン・指・マウス統一）
+    if(window.PointerEvent){
+      cv.addEventListener('pointerdown',function(e){var p=getPos(e);startDraw(p.x,p.y);try{cv.setPointerCapture(e.pointerId);}catch(_){}});
+      cv.addEventListener('pointermove',function(e){if(!drawing)return;e.preventDefault();var p=getPos(e);moveDraw(p.x,p.y);});
+      cv.addEventListener('pointerup',endDraw);
+      cv.addEventListener('pointercancel',endDraw);
+    }
+    // Touch（Pointer非対応環境・一部ペンの保険）
+    cv.addEventListener('touchstart',function(e){var t=e.touches[0];var p=getPos(t);startDraw(p.x,p.y);},{passive:true});
+    cv.addEventListener('touchmove',function(e){if(!drawing)return;e.preventDefault();var t=e.touches[0];var p=getPos(t);moveDraw(p.x,p.y);},{passive:false});
+    cv.addEventListener('touchend',endDraw);
+    // Mouse（PC保険）
+    cv.addEventListener('mousedown',function(e){var p=getPos(e);startDraw(p.x,p.y);});
+    cv.addEventListener('mousemove',function(e){if(!drawing)return;var p=getPos(e);moveDraw(p.x,p.y);});
+    cv.addEventListener('mouseup',endDraw);
+    cv.addEventListener('mouseleave',endDraw);
   }
   document.querySelectorAll('.pbox').forEach(function(pbox,i){ initCanvas(pbox,'pbox_cv_'+i); });
 }
