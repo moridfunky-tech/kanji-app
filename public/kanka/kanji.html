@@ -47,7 +47,14 @@ body{font-family:'Noto Sans JP',sans-serif;background:#f5f2ee;color:#1a1a2e}
     <button class="gbtn" id="gbtn" onclick="gradeAll()">採点する</button>
   </div>
   <div id="result-msg" style="text-align:center;margin-top:12px;font-size:14pt;font-weight:700;color:#c0392b"></div>
+  <div id="reviewArea" style="display:none;margin-top:16px">
+    <div style="text-align:center;margin-bottom:12px">
+      <button id="reviewBtn" onclick="startReview()" style="background:#c0392b;color:white;border:none;padding:14px 28px;border-radius:24px;font-size:14pt;font-weight:700;cursor:pointer;font-family:inherit">✏️ まちがえた漢字をれんしゅうする</button>
+    </div>
+    <div id="reviewCards" style="display:none"></div>
+  </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 <script src="../kanji_weeks.js"></script>
 <script>
 let qs=[
@@ -148,6 +155,11 @@ async function gradeAll(){
   document.getElementById('sv').textContent=score;
   fetch('/api/activity/kanka',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'test'})}).catch(function(){});
   sendToLine(score, allResults);
+  // テスト後の復習：間違えた漢字を保持し、ボタンを表示
+  window._reviewWrong = allResults.filter(function(r){return !r.correct;}).map(function(r){return {q:r.q,b:r.b,a:r.a,ans:r.ans};});
+  if(window._reviewWrong.length){
+    document.getElementById('reviewArea').style.display='block';
+  }
   // 間違えた漢字を繰り越し保存
   try{
     const wrongList = allResults.filter(function(r){return !r.correct;}).map(function(r){return {q:r.q,b:r.b,a:r.a,ans:r.ans};});
@@ -167,6 +179,66 @@ async function gradeAll(){
   }catch(e){
     document.getElementById('result-msg').textContent=`${score}/15点　メール送信エラー`;
   }
+}
+
+function startReview(){
+  document.getElementById('reviewBtn').style.display='none';
+  var wrong = window._reviewWrong || [];
+  if(!wrong.length) return;
+  var area = document.getElementById('reviewCards');
+  area.style.display='block';
+  var THEME='#c0392b';
+  var html='<div style="text-align:center;font-size:13pt;font-weight:700;color:'+THEME+';margin-bottom:12px">まちがえた漢字（'+wrong.length+'こ）をれんしゅうしよう！</div>';
+  html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px">';
+  for(var i=0;i<wrong.length;i++){
+    var w=wrong[i];
+    html+='<div style="border:2px solid '+THEME+';border-radius:10px;overflow:hidden;background:white">';
+    html+='<div style="text-align:center;padding:8px;background:'+THEME+';color:white"><span style="font-size:28pt;font-weight:700;font-family:serif">'+w.ans+'</span><span style="font-size:11pt;margin-left:8px">'+w.b+'</span></div>';
+    html+='<div style="padding:6px 10px;font-size:10pt;color:#555">'+w.q+'【'+w.b+'】'+w.a+'</div>';
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:8px">';
+    html+='<div class="rvbox" style="height:130px;border:1px solid #b8b8b8;position:relative;touch-action:none"><div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:80pt;color:rgba(0,0,0,0.08);font-weight:700;font-family:serif;z-index:0;pointer-events:none">'+w.ans+'</div></div>';
+    html+='<div class="rvbox" style="height:130px;border:1px solid #b8b8b8;position:relative;touch-action:none"></div>';
+    html+='</div></div>';
+  }
+  html+='</div>';
+  area.innerHTML=html;
+  initReviewPads(THEME);
+  area.scrollIntoView({behavior:'smooth'});
+}
+
+function initReviewPads(theme){
+  document.querySelectorAll('.rvbox').forEach(function(box){
+    if(box.querySelector('canvas')) return;
+    var cv=document.createElement('canvas');
+    cv.style.touchAction='none';cv.style.position='absolute';cv.style.left='0';cv.style.top='0';cv.style.width='100%';cv.style.height='100%';cv.style.zIndex='3';
+    box.appendChild(cv);
+    var rect=box.getBoundingClientRect();var ratio=Math.max(window.devicePixelRatio||1,1);
+    cv.width=rect.width*ratio;cv.height=rect.height*ratio;cv.getContext('2d').scale(ratio,ratio);
+    var clr=document.createElement('button');
+    clr.textContent='🗑';
+    clr.style.cssText='position:absolute;top:-9px;right:-9px;width:26px;height:26px;font-size:13px;color:'+theme+';background:white;border:1.5px solid '+theme+';border-radius:50%;z-index:5;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0';
+    box.appendChild(clr);
+    if(typeof SignaturePad!=='undefined'){
+      var pad=new SignaturePad(cv,{minWidth:1.2,maxWidth:3.2,penColor:'#1a1a2e',throttle:0,minDistance:0,velocityFilterWeight:0.6,backgroundColor:'rgba(0,0,0,0)'});
+      clr.addEventListener('click',function(e){e.stopPropagation();pad.clear();});
+    }else{
+      var ctx=cv.getContext('2d');ctx.strokeStyle='#1a1a2e';ctx.lineWidth=7;ctx.lineCap='round';ctx.lineJoin='round';
+      clr.addEventListener('click',function(e){e.stopPropagation();ctx.clearRect(0,0,cv.width,cv.height);});
+      var drawing=false;
+      function gp(e){var r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)*(cv.width/r.width),y:(e.clientY-r.top)*(cv.height/r.height)};}
+      function sd(x,y){drawing=true;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+0.1,y+0.1);ctx.stroke();}
+      function md(x,y){if(!drawing)return;ctx.lineTo(x,y);ctx.stroke();}
+      function ed(){drawing=false;}
+      if(window.PointerEvent){
+        cv.addEventListener('pointerdown',function(e){var p=gp(e);sd(p.x,p.y);try{cv.setPointerCapture(e.pointerId);}catch(_){}});
+        cv.addEventListener('pointermove',function(e){if(!drawing)return;e.preventDefault();var evs=(e.getCoalescedEvents&&e.getCoalescedEvents().length)?e.getCoalescedEvents():[e];for(var k=0;k<evs.length;k++){var p=gp(evs[k]);md(p.x,p.y);}});
+        cv.addEventListener('pointerup',ed);cv.addEventListener('pointercancel',ed);
+      }
+      cv.addEventListener('touchstart',function(e){var t=e.touches[0];var p=gp(t);sd(p.x,p.y);},{passive:true});
+      cv.addEventListener('touchmove',function(e){if(!drawing)return;e.preventDefault();var t=e.touches[0];var p=gp(t);md(p.x,p.y);},{passive:false});
+      cv.addEventListener('touchend',ed);
+    }
+  });
 }
 
 async function sendToLine(score, allResults){
@@ -200,7 +272,7 @@ async function sendToLine(score, allResults){
     const saveRes=await fetch('/api/image/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({imageData:imgData})});
     const saveD=await saveRes.json();
     // LINE送信
-    await fetch('/api/line/test-result',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({owner:'kanka',score:score,total:15,imageUrl:saveD.url})});
+    await fetch('/api/line/test-result',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({owner:'kanka',score:score,total:15,imageUrl:saveD.url,details:allResults.map(function(r){return {ans:r.ans,b:r.b,q:r.q,a:r.a,correct:r.correct};})})});
   }catch(e){ console.error('LINE送信エラー',e); }
 }
 // 週データと繰り越しを読み込んでからビルド

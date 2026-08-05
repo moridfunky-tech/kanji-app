@@ -393,8 +393,22 @@ app.post('/api/line/test-result', async (req, res) => {
 
     let text = '📚 ' + childName + ' の漢字テスト結果\n'
       + '📅 ' + dateStr + '\n'
-      + '✏️ ' + score + ' / ' + total + ' 点\n\n'
-      + '※AI採点なので、答案を確認してね';
+      + '✏️ ' + score + ' / ' + total + ' 点\n';
+
+    // 問題の内訳（正解・不正解）
+    const details = Array.isArray(req.body.details) ? req.body.details : [];
+    if (details.length) {
+      const wrongs = details.filter(function(d){ return !d.correct; });
+      if (wrongs.length) {
+        text += '\n❌ まちがえた漢字（' + wrongs.length + '問）\n';
+        wrongs.forEach(function(d){
+          text += '　' + (d.ans||'') + '（' + (d.b||'') + '）… ' + (d.q||'') + '【' + (d.b||'') + '】' + (d.a||'') + '\n';
+        });
+      } else {
+        text += '\n🎉 ぜんもん正解！\n';
+      }
+    }
+    text += '\n※AI採点なので、答案も確認してね';
 
     const messages = [{ type: 'text', text: text }];
     if (imageUrl && /^https:\/\//.test(imageUrl)) {
