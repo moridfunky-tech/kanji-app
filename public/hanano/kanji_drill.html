@@ -201,7 +201,7 @@ async function markDone(){
   const btn=document.getElementById('doneBtn');
   btn.disabled=true; btn.textContent='きろくしたよ！🎉';
   try{
-    await fetch('/api/activity/'+OWNER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'drill'})});
+    await fetch('/api/activity/'+OWNER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'drill'})});
     await fetch('/api/pet/'+OWNER+'/addpoints',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({points:10,type:'kanji',reason:'漢字練習'})}).catch(function(){});
   }catch(e){}
   setTimeout(function(){ btn.textContent='✅ れんしゅうしたよ！'; btn.disabled=false; }, 3000);
